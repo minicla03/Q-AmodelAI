@@ -1,6 +1,7 @@
 import os
-from ingestion import setup_qa_system, add_document_to_vectorstore
+import shutil
 from retrival import ask_question
+from ingestion import setup_qa_system, add_document_to_vectorstore
 
 class QASystemManager:
     '''
@@ -33,8 +34,25 @@ class QASystemManager:
 
     def add_document(self, file_path):
         """
-        Aggiunge un nuovo documento PDF al vectorstore e aggiorna la catena QA.
+        Aggiunge un nuovo documento PDF al vectorstore esistente.
         """
-        add_document_to_vectorstore(file_path, persist_dir=self.persist_dir)
-        self._initialize(force_rebuild=False) 
+        print(f"[DEBUG] Aggiunta documento: {file_path}")
+        
+        dest_path = os.path.join(self.pdf_path, os.path.basename(file_path))
+        if not os.path.exists(dest_path):
+            shutil.copy(file_path, dest_path)
+        print(f"[DEBUG] Documento copiato in: {dest_path}")
 
+        try:
+            add_document_to_vectorstore(file_path, persist_dir=self.persist_dir)
+            print(f"[DEBUG] Documento aggiunto al vectorstore con successo")
+        except Exception as e:
+            print(f"[ERROR] Errore durante l'aggiunta al vectorstore: {e}")
+            return
+
+        self.close()
+        self._initialize(force_rebuild=False)
+
+    def close(self):
+        if self.qa_chain:
+            self.qa_chain = None

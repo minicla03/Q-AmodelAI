@@ -60,15 +60,15 @@ def on_upload_pdf():
     file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
     if file_path:
         try:
+            print(f"[DEBUG] Aggiunta documento: {file_path}")
             manager.add_document(file_path)
-            response_text.config(state=tk.NORMAL)
-            response_text.insert(tk.END, f"\n✅ Documento aggiunto: {file_path}\n")
-            response_text.config(state=tk.DISABLED)
-
+            msg = f"\nDocumento aggiunto: {file_path}\n"
         except Exception as e:
-            response_text.config(state=tk.NORMAL)
-            response_text.insert(tk.END, f"\n❌ Errore caricamento: {e}\n")
-            response_text.config(state=tk.DISABLED)
+            print(f"[ERROR] Errore durante l'aggiunta del documento: {e}")
+            msg = f"\nErrore caricamento: {e}\n"
+        response_text.config(state=tk.NORMAL)
+        response_text.insert(tk.END, msg)
+        response_text.config(state=tk.DISABLED)
 
 # UI setup
 root = tk.Tk()

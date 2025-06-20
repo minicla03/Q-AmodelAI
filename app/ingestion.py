@@ -15,7 +15,6 @@ from langchain_community.chat_models import ChatOllama
 from langchain.chains import RetrievalQA
 from qa_utils import clean_text
 
-
 def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=False):
     # Controlla se ricostruire il vector store
     if force_rebuild or not os.path.exists(persist_dir):
@@ -53,29 +52,19 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
     qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
     return qa_chain
 
-def add_document_to_vectorstore(pdf_path, persist_dir="chroma_db"):
-    if not os.path.exists(pdf_path) or not pdf_path.endswith(".pdf"):
-        raise ValueError(f"[ERROR] File non valido: {pdf_path}")
-
-    loader = PyPDFLoader(pdf_path)
+def add_document_to_vectorstore(file_path, persist_dir="chroma_db"):
+    """
+    Aggiunge un nuovo documento PDF al vectorstore Chroma esistente.
+    """
+    print(f"[DEBUG] Caricamento documento: {file_path}")
+    loader = PyPDFLoader(file_path)
     documents = loader.load()
-
-    # Aggiungi nome file ai metadati per tracciamento fonte
-    filename = os.path.basename(pdf_path)
-    for doc in documents:
-        doc.metadata["source"] = filename
-
-    documents = [doc for doc in documents if clean_text(doc.page_content).strip()]
-    if not documents:
-        print(f"[DEBUG] Nessun contenuto utile in {pdf_path}")
-        return
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200)
     chunks = splitter.split_documents(documents)
-
+    
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-    vectorstore = Chroma(persist_directory=persist_dir, embedding_function=embeddings)
-
-    vectorstore.add_documents(chunks)
+    vectorstore = Chroma.from_documents(chunks, embeddings, persist_directory=persist_dir)
     vectorstore.persist()
-    print(f"[DEBUG] Aggiunto {len(chunks)} chunk da: {filename}")
+    print(f"[DEBUG] Vector store created with {len(chunks)} chunks")
+    print(f"[DEBUG] Persistenza completata")
