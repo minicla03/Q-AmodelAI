@@ -16,23 +16,24 @@ from langchain.chains import RetrievalQA
 from qa_utils import clean_text
 
 
-def setup_qa_system(pdf_path="data/Android.pdf", persist_dir="chroma_db", force_rebuild=False):
+def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=False):
     # Controlla se ricostruire il vector store
     if force_rebuild or not os.path.exists(persist_dir):
         if os.path.exists(persist_dir):
             shutil.rmtree(persist_dir)
             print(f"[DEBUG] Rebuilding vector store...")
         
-        # Load and process documents
-        loader = PyPDFLoader(pdf_path)
-        documents = loader.load()
+        documents = []
+        for filename in os.listdir(pdf_path):
+            if filename.endswith(".pdf"):
+                filepath = os.path.join(pdf_path, filename)
+                loader = PyPDFLoader(filepath)
+                docs = loader.load()
+                for doc in docs:
+                    doc.metadata["source"] = filename  # Imposta solo il nome del file come fonte
+                    if clean_text(doc.page_content).strip():
+                        documents.append(doc)
         
-        documents = [
-            doc for doc in documents
-            if clean_text(doc.page_content).strip()
-        ]
-        
-        # I tuoi nuovi parametri
         splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200)
         chunks = splitter.split_documents(documents)
         
@@ -42,14 +43,12 @@ def setup_qa_system(pdf_path="data/Android.pdf", persist_dir="chroma_db", force_
         print(f"[DEBUG] Vector store created with {len(chunks)} chunks")
         
     else:
-        # Carica il vector store esistente
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
         vectorstore = Chroma(persist_directory=persist_dir, embedding_function=embeddings)
         print("[DEBUG] Loaded existing vector store")
     
-    # Initialize LLM and retriever
     llm = ChatOllama(model="llama3:latest", temperature=0.1, max_tokens=512, top_p=0.95, top_k=40)
-    retriever = vectorstore.as_retriever(search_type="similarity", k=10)
+    retriever = vectorstore.as_retriever(search_type="mmr", k=5)
     
     qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
     return qa_chain

@@ -3,24 +3,19 @@ from tkinter import scrolledtext
 import threading
 import traceback
 from QASystemManager import QASystemManager
+from qa_utils import detect_language_from_query
 
 manager = QASystemManager()
 
-def ask_async(query):
+def ask_async(query, default_language):
+    language = detect_language_from_query(query) or default_language
     try:
-        risposta, sources = manager.ask(query)
-
-        ground_truth = "Risposta corretta di esempio"
-        scores = manager.evaluate(risposta, ground_truth)
-
-        print(f"[🧪 Valutazione]: {query}")
-        for metric, score in scores.items():
-            print(f"{metric}: {score:.3f}" if isinstance(score, float) else f"{metric}: {score}")
+        risposta, sources = manager.ask(query, language)
 
         def update_ui():
             response_text.config(state=tk.NORMAL)
             response_text.delete(1.0, tk.END)
-            response_text.insert(tk.END, risposta + "\n\n📄 Fonti usate:\n", 'bold')
+            response_text.insert(tk.END, risposta + "\n\nFonti usate:\n", 'bold')
             for doc in sources:
                 response_text.insert(tk.END, "- " + doc.metadata.get("source", "N/A") + "\n")
             response_text.config(state=tk.DISABLED)
@@ -55,11 +50,12 @@ def on_ask():
     response_text.delete(1.0, tk.END)
     response_text.insert(tk.END, "Sto elaborando la tua domanda...\n")
     response_text.config(state=tk.DISABLED)
-    threading.Thread(target=ask_async, args=(query,), daemon=True).start()
+    default_language = "italiano" 
+    threading.Thread(target=ask_async, args=(query, default_language), daemon=True).start()
 
 # UI setup
 root = tk.Tk()
-root.title("QA Modello Italiano")
+root.title("QA model for notes")
 root.geometry("700x450")
 root.configure(bg="#f0f4f8")
 
