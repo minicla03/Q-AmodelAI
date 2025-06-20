@@ -1,8 +1,10 @@
 import tkinter as tk
 from tkinter import scrolledtext
+from tkinter import filedialog
 import threading
 import traceback
 from QASystemManager import QASystemManager
+from ingestion import add_document_to_vectorstore
 from qa_utils import detect_language_from_query
 
 manager = QASystemManager()
@@ -53,6 +55,21 @@ def on_ask():
     default_language = "italiano" 
     threading.Thread(target=ask_async, args=(query, default_language), daemon=True).start()
 
+
+def on_upload_pdf():
+    file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
+    if file_path:
+        try:
+            manager.add_document(file_path)
+            response_text.config(state=tk.NORMAL)
+            response_text.insert(tk.END, f"\n✅ Documento aggiunto: {file_path}\n")
+            response_text.config(state=tk.DISABLED)
+
+        except Exception as e:
+            response_text.config(state=tk.NORMAL)
+            response_text.insert(tk.END, f"\n❌ Errore caricamento: {e}\n")
+            response_text.config(state=tk.DISABLED)
+
 # UI setup
 root = tk.Tk()
 root.title("QA model for notes")
@@ -76,9 +93,16 @@ entry = tk.Entry(frame, font=font_entry, width=60, relief=tk.FLAT, bd=2)
 entry.pack(fill=tk.X, pady=(0, 12))
 entry.focus()
 
-btn_ask = tk.Button(frame, text="Chiedi", font=font_button, bg="#4a90e2", fg="white", activebackground="#357ABD",
+button_frame = tk.Frame(frame, bg="#f0f4f8")
+button_frame.pack(pady=(0, 15), anchor="center")
+
+btn_ask = tk.Button(button_frame, text="Chiedi", font=font_button, bg="#4a90e2", fg="white", activebackground="#357ABD",
                     activeforeground="white", relief=tk.FLAT, padx=10, pady=6, command=on_ask, cursor="hand2")
-btn_ask.pack(pady=(0, 15))
+btn_ask.pack(side=tk.LEFT, padx=(0, 10))
+
+btn_upload = tk.Button(button_frame, text="Carica PDF", font=font_button, bg="#27ae60", fg="white",
+                       activebackground="#1e8449", command=on_upload_pdf)
+btn_upload.pack(side=tk.LEFT)
 
 response_text = scrolledtext.ScrolledText(frame, font=font_text, height=15, wrap=tk.WORD, relief=tk.FLAT, bd=2)
 response_text.tag_config('bold', font=("Segoe UI", 11, "bold"))

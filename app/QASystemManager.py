@@ -1,7 +1,6 @@
 import os
-from ingestion import setup_qa_system
+from ingestion import setup_qa_system, add_document_to_vectorstore
 from retrival import ask_question
-from evaluation import evaluate_all
 
 class QASystemManager:
     '''
@@ -9,8 +8,15 @@ class QASystemManager:
     Questa classe si occupa di configurare il sistema QA, gestire le richieste e valutare le risposte.
     '''
     def __init__(self, pdf_path="data", persist_dir="chroma_db"):
+        self.pdf_path = pdf_path
+        self.persist_dir = persist_dir
+        self.ready = False
+        self.qa_chain = None
+        self._initialize()
+
+    def _initialize(self, force_rebuild=False):
         try:
-            self.qa_chain = setup_qa_system(pdf_path, persist_dir)
+            self.qa_chain = setup_qa_system(self.pdf_path, self.persist_dir, force_rebuild=force_rebuild)
             self.ready = True
         except Exception as e:
             print(f"[QA Init Error] {e}")
@@ -23,5 +29,12 @@ class QASystemManager:
     def ask(self, query, language="italian"):
         if not self.qa_chain:
             return "Sistema QA non pronto", []
-        risposta, sources = ask_question(self.qa_chain, query, language)
-        return risposta, sources
+        return ask_question(self.qa_chain, query, language)
+
+    def add_document(self, file_path):
+        """
+        Aggiunge un nuovo documento PDF al vectorstore e aggiorna la catena QA.
+        """
+        add_document_to_vectorstore(file_path, persist_dir=self.persist_dir)
+        self._initialize(force_rebuild=False) 
+
