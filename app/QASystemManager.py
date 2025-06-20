@@ -1,6 +1,6 @@
 import os
 from ingestion import setup_qa_system
-from qa_utils import ask_question
+from retrival import ask_question
 from evaluation import evaluate_all
 
 class QASystemManager:

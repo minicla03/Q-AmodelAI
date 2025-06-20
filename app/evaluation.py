@@ -4,9 +4,12 @@ This module provides functions to compute various evaluation metrics such as
 Exact Match, F1 score, BLEU score, and ROUGE-L score.
 '''
 
-import nltk
+from nltk.tokenize import word_tokenize
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge_score import rouge_scorer
+import nltk
+nltk.download('punkt_tab')
+
 
 TEST_CASES = [
     {
@@ -27,8 +30,8 @@ def compute_exact_match(prediction, ground_truth):
     return int(prediction.strip().lower() == ground_truth.strip().lower())
 
 def compute_f1(prediction, ground_truth):
-    pred_tokens = prediction.lower().split()
-    gt_tokens = ground_truth.lower().split()
+    pred_tokens = word_tokenize(prediction.lower(), language='italian')
+    gt_tokens = word_tokenize(ground_truth.lower(), language='italian')
     common = set(pred_tokens) & set(gt_tokens)
     if len(common) == 0:
         return 0.0
@@ -37,8 +40,8 @@ def compute_f1(prediction, ground_truth):
     return 2 * (precision * recall) / (precision + recall)
 
 def compute_bleu(prediction, ground_truth):
-    reference = [nltk.word_tokenize(ground_truth.lower())]
-    hypothesis = nltk.word_tokenize(prediction.lower())
+    reference = [word_tokenize(ground_truth.lower(), language='italian')]
+    hypothesis = word_tokenize(prediction.lower(), language='italian')
     return sentence_bleu(reference, hypothesis, smoothing_function=SmoothingFunction().method1)
 
 def compute_rouge(prediction, ground_truth):
