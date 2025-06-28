@@ -9,9 +9,9 @@ import shutil
 import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
-from langchain_community.chat_models import ChatOllama
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+from langchain_ollama import ChatOllama
 from langchain.chains import RetrievalQA
 from qa_utils import clean_text
 
@@ -47,7 +47,7 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
         print("[DEBUG] Loaded existing vector store")
     
     llm = ChatOllama(model="llama3:latest", temperature=0.1, max_tokens=512, top_p=0.95, top_k=40)
-    retriever = vectorstore.as_retriever(search_type="mmr", k=5)
+    retriever = vectorstore.as_retriever(search_type="similarity", k=3)
     
     qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
     return qa_chain
