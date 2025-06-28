@@ -56,3 +56,17 @@ class QASystemManager:
     def close(self):
         if self.qa_chain:
             self.qa_chain = None
+    
+    def list_documents(self):
+        """
+        Restituisce una lista dei documenti PDF attualmente presenti nella directory `pdf_path`.
+        """
+        try:
+            return sorted([
+                f for f in os.listdir(self.pdf_path)
+                if f.lower().endswith(".pdf") and os.path.isfile(os.path.join(self.pdf_path, f))
+            ])
+        except Exception as e:
+            print(f"[ERROR] Impossibile elencare i documenti: {e}")
+            return []
+

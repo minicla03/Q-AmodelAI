@@ -17,7 +17,7 @@ def ask_async(query, default_language):
         def update_ui():
             response_text.config(state=tk.NORMAL)
             response_text.delete(1.0, tk.END)
-            response_text.insert(tk.END, risposta + "\n\nFonti usate:\n", 'bold')
+            response_text.insert(tk.END, risposta.get("output_text", "") + "\n\nFonti usate:\n", 'bold')
             for doc in sources:
                 response_text.insert(tk.END, "- " + doc.metadata.get("source", "N/A") + "\n")
             response_text.config(state=tk.DISABLED)
@@ -70,6 +70,23 @@ def on_upload_pdf():
         response_text.insert(tk.END, msg)
         response_text.config(state=tk.DISABLED)
 
+def on_show_documents():
+    try:
+        docs = manager.list_documents()
+        if not docs:
+            msg = "\nNessun documento caricato.\n"
+        else:
+            msg = "\nDocumenti attualmente caricati:\n"
+            for i, doc in enumerate(docs, 1):
+                msg += f"{i}. {doc}\n"
+    except Exception as e:
+        msg = f"\nErrore nella lettura dei documenti: {e}\n"
+
+    response_text.config(state=tk.NORMAL)
+    response_text.delete(1.0, tk.END)
+    response_text.insert(tk.END, msg)
+    response_text.config(state=tk.DISABLED)
+
 # UI setup
 root = tk.Tk()
 root.title("QA model for notes")
@@ -103,6 +120,10 @@ btn_ask.pack(side=tk.LEFT, padx=(0, 10))
 btn_upload = tk.Button(button_frame, text="Carica PDF", font=font_button, bg="#27ae60", fg="white",
                        activebackground="#1e8449", command=on_upload_pdf)
 btn_upload.pack(side=tk.LEFT)
+
+btn_show_docs = tk.Button(button_frame, text="Mostra documenti", font=font_button, bg="#f39c12", fg="white",
+                          activebackground="#d68910", command=on_show_documents)
+btn_show_docs.pack(side=tk.LEFT, padx=(10, 0))
 
 response_text = scrolledtext.ScrolledText(frame, font=font_text, height=15, wrap=tk.WORD, relief=tk.FLAT, bd=2)
 response_text.tag_config('bold', font=("Segoe UI", 11, "bold"))
