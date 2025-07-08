@@ -181,7 +181,7 @@ if results:
     print("\nMetriche medie su tutti i test:")
     avg = {key: sum(r[key] for r in results) / len(results) for key in results[0]}
     
-    for key, valuea in avg.items():
+    for key, value in avg.items():
         print(f"  {key}: {value:.3f}")
 
     with open("metriche_medie.txt", "w", encoding="utf-8") as f:

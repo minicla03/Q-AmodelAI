@@ -1,8 +1,8 @@
 Metriche medie su tutti i test:
 
-F1: 0.183
-BLEU: 0.034
-ROUGE-L: 0.186
-Semantic Similarity: 0.827
-Context Precision: 0.583
-Context Recall: 0.625
+F1: 0.187
+BLEU: 0.036
+ROUGE-L: 0.190
+Semantic Similarity: 0.834
+Context Precision: 0.667
+Context Recall: 0.667

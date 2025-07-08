@@ -65,6 +65,6 @@ def add_document_to_vectorstore(file_path, persist_dir="chroma_db"):
     
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     vectorstore = Chroma.from_documents(chunks, embeddings, persist_directory=persist_dir)
-    vectorstore.persist()
+    vectorstore.add_documents(chunks)
     print(f"[DEBUG] Vector store created with {len(chunks)} chunks")
     print(f"[DEBUG] Persistenza completata")
