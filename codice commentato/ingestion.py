@@ -71,7 +71,7 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
         # 3. Suddivide i documenti in chunk con overlap
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=600,  # Dimensione ottimale per bilanciare contesto e precisione
-            chunk_overlap=200  # Garantisce continuitÃ  del contesto tra i chunk
+            chunk_overlap=200  # Garantisce continuità  del contesto tra i chunk
         )
         chunks = splitter.split_documents(documents)
         
@@ -100,7 +100,7 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
     # 5. Configura il modello LLM con parametri ottimizzati
     llm = ChatOllama(
         model="llama3:latest",
-        temperature=0.1,  # Valore basso per risposte piÃ¹ deterministiche
+        temperature=0.1,  # Valore basso per risposte più deterministiche
         max_tokens=512,   # Limita la lunghezza delle risposte
         top_p=0.95,       # Parametro per il nucleus sampling
         top_k=40          # Parametro per il top-k sampling
@@ -108,8 +108,8 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
     
     # 6. Configura il retriever dei documenti
     retriever = vectorstore.as_retriever(
-        search_type="similarity",  # Usa la ricerca per similaritÃ 
-        k=3  # Restituisce i 3 documenti piÃ¹ rilevanti
+        search_type="similarity",  # Usa la ricerca per similarità 
+        k=3  # Restituisce i 3 documenti più rilevanti
     )
     
     # 7. Crea la catena QA finale
