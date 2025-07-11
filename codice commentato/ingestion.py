@@ -7,7 +7,7 @@ a partire da documenti PDF. Le funzionalità principali includono:
 1. Estrazione e pulizia del testo dai PDF
 2. Suddivisione in chunk e elaborazione del testo
 3. Generazione di embedding con modelli multilingue
-4. Creazione e mantenimento dello vector store
+4. Creazione e mantenimento del vector store
 5. Configurazione del sistema QA con capacità di retrieval
 
 Tecnologie utilizzate:
@@ -39,7 +39,7 @@ Restituisce:
     RetrievalQA: Catena QA configurata e pronta per rispondere a domande
 
 Funzionamento:
-1. Verifica se lo vector store deve essere ricostruito
+1. Verifica se il vector store deve essere ricostruito
 2. Elabora tutti i PDF nella directory
 3. Crea chunk di testo con overlap
 4. Genera embedding e li memorizza
@@ -75,7 +75,7 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
         )
         chunks = splitter.split_documents(documents)
         
-        # 4. Crea gli embedding e lo vector store
+        # 4. Crea gli embedding e il vector store
         embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
         )
@@ -87,7 +87,7 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
         vectorstore.persist()
         print(f"[DEBUG] Vector store creato con {len(chunks)} chunk")
         
-    else:  # Carica uno vector store esistente
+    else:  # Carica un vector store esistente
         embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
         )
@@ -122,16 +122,16 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
     return qa_chain
 
 """
-Aggiunge un documento PDF a uno vector store esistente.
+Aggiunge un documento PDF a un vector store esistente.
 
 Parametri:
     file_path (str): Percorso al file PDF da aggiungere
-    persist_dir (str): Directory dello vector store esistente
+    persist_dir (str): Directory del vector store esistente
 
 Processo:
     1. Carica e suddivide il documento PDF
     2. Genera embedding per i nuovi chunk
-    3. Li aggiunge allo vector store esistente
+    3. Li aggiunge al vector store esistente
     4. Rende persistenti le modifiche
 """
 
