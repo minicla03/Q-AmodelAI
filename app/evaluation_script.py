@@ -146,46 +146,52 @@ TEST_CASES = [
     },
 ]
 
+with open("metriche_medie.txt", "w", encoding="utf-8") as f:
+    for idx, test in enumerate(TEST_CASES, 1):
+        query = test["query"]
+        expected = test["expected_answer"]
+        lang = test.get("language_hint", "italian")
+        relevant_docs = test.get("relevant_docs", [])
 
-for idx, test in enumerate(TEST_CASES, 1):
-    query = test["query"]
-    expected = test["expected_answer"]
-    lang = test.get("language_hint", "italian")
-    relevant_docs = test.get("relevant_docs", [])
+        prediction, source_docs = manager.ask(query, language=lang)
+        if isinstance(prediction, dict):
+            output_text = prediction.get("output_text", "")
+        else:
+            output_text = str(prediction)
+        retrieved_sources = [doc.metadata.get("source") for doc in source_docs if doc.metadata.get("source")]
 
-    prediction, source_docs = manager.ask(query, language=lang)
-    print(type(prediction), type(source_docs)) 
-    output_text = prediction.get("output_text", "")
+        qa_scores = evaluate_all(output_text, expected, language=lang)
+        context_precision, context_recall = compute_context_precision_recall(retrieved_sources, relevant_docs)
 
-    retrieved_sources = [doc.metadata.get("source") for doc in source_docs if doc.metadata.get("source")]
+        qa_scores["Context Precision"] = context_precision
+        qa_scores["Context Recall"] = context_recall
+        results.append(qa_scores)
 
-    qa_scores = evaluate_all(output_text, expected, language=lang)
-    context_precision, context_recall = compute_context_precision_recall(retrieved_sources, relevant_docs)
+        print(f"Test #{idx}")
+        print(f"Domanda: {query}")
+        print(f"Risposta attesa: {expected}")
+        print(f"Risposta modello: {output_text}")
+        print("Metriche:")
+        for key, value in qa_scores.items():
+            print(f"    - {key}: {value:.3f}" if isinstance(value, float) else f"    - {key}: {value}")
+        print("-" * 60)
 
-    print(f"Test #{idx}")
-    print(f"Domanda: {query}")
-    print(f"Risposta attesa: {expected}")
-    print(f"Risposta modello: {output_text}")
-    print("Metriche:")
-    for key, value in qa_scores.items():
-        print(f"    - {key}: {value:.3f}" if isinstance(value, float) else f"    - {key}: {value}")
-    print(f"    - Context Precision: {context_precision:.3f}")
-    print(f"    - Context Recall: {context_recall:.3f}")
-    print("-" * 60)
+        f.write(f"Test #{idx}\n")
+        f.write(f"Domanda: {query}\n")
+        f.write(f"Risposta attesa:\n{expected}\n")
+        f.write(f"Risposta modello:\n{output_text}\n")
+        f.write("Metriche:\n")
+        for key, value in qa_scores.items():
+            f.write(f"  - {key}: {value:.3f}\n" if isinstance(value, float) else f"  - {key}: {value}\n")
+        f.write("-" * 60 + "\n\n")
 
-    qa_scores["Context Precision"] = context_precision
-    qa_scores["Context Recall"] = context_recall
-    results.append(qa_scores)
-
-if results:
-    print("\nMetriche medie su tutti i test:")
-    avg = {key: sum(r[key] for r in results) / len(results) for key in results[0]}
-    
-    for key, value in avg.items():
-        print(f"  {key}: {value:.3f}")
-
-    with open("metriche_medie.txt", "w", encoding="utf-8") as f:
-        f.write(f"Metriche medie su tutti i test:\n\n")
+    if results:
+        f.write("\nMetriche medie su tutti i test:\n\n")
+        avg = {key: sum(r[key] for r in results) / len(results) for key in results[0]}
         for key, value in avg.items():
             f.write(f"{key}: {value:.3f}\n")
+
+        print("\nMetriche medie su tutti i test:")
+        for key, value in avg.items():
+            print(f"  {key}: {value:.3f}")
 

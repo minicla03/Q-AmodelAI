@@ -23,6 +23,6 @@ def detect_language_from_query(query):
     query_lower = query.lower()
     for lang, aliases in LANGUAGE_ALIASES.items():
         for alias in aliases:
-            if re.search(r"\b(in|in lingua|in lingua)\s+" + re.escape(alias) + r"\b", query_lower) or f"rispondi in {alias}" in query_lower:
+            if re.search(r"\b(in|in lingua)\s+" + re.escape(alias) + r"\b", query_lower) or f"rispondi in {alias}" in query_lower:
                 return lang
     return None

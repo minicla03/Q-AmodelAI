@@ -38,7 +38,6 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
         
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
         vectorstore = Chroma.from_documents(chunks, embeddings, persist_directory=persist_dir)
-        vectorstore.persist()
         print(f"[DEBUG] Vector store created with {len(chunks)} chunks")
         
     else:
@@ -46,7 +45,7 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
         vectorstore = Chroma(persist_directory=persist_dir, embedding_function=embeddings)
         print("[DEBUG] Loaded existing vector store")
     
-    llm = ChatOllama(model="llama3:latest", temperature=0.1, max_tokens=512, top_p=0.95, top_k=40)
+    llm = ChatOllama(model="llama3:latest", temperature=0.1, top_p=0.95, top_k=40)
     retriever = vectorstore.as_retriever(search_type="similarity", k=3)
     
     qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
@@ -64,7 +63,37 @@ def add_document_to_vectorstore(file_path, persist_dir="chroma_db"):
     chunks = splitter.split_documents(documents)
     
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-    vectorstore = Chroma.from_documents(chunks, embeddings, persist_directory=persist_dir)
+    vectorstore = Chroma(persist_directory=persist_dir, embedding_function=embeddings)
     vectorstore.add_documents(chunks)
     print(f"[DEBUG] Vector store created with {len(chunks)} chunks")
     print(f"[DEBUG] Persistenza completata")
+
+def delete_document_from_vectorstore(file_name, persist_dir="chroma_db"):
+    """
+    Elimina i chunk associati a un file specifico dal vectorstore Chroma.
+
+    Args:
+        file_name (str): Il nome del file PDF da eliminare.
+        persist_dir (str): La directory dove si trova il vectorstore.
+    """
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    vectorstore = Chroma(persist_directory=persist_dir, embedding_function=embeddings)
+
+    try:
+        ids_to_delete = []
+        docs_in_store = vectorstore.get()
+        
+        for doc_id, doc_meta in zip(docs_in_store['ids'], docs_in_store['metadatas']):
+            if doc_meta.get("source") == file_name:
+                ids_to_delete.append(doc_id)
+
+        print(f"[DEBUG] Trovati {len(ids_to_delete)} chunk da eliminare per il file '{file_name}'")
+
+        if ids_to_delete:
+            vectorstore.delete(ids=ids_to_delete)
+            print(f"[DEBUG] Eliminati {len(ids_to_delete)} chunk relativi a '{file_name}' dal vectorstore.")
+        else:
+            print(f"[DEBUG] Nessun chunk trovato per il file '{file_name}'.")
+
+    except Exception as e:
+        print(f"[ERROR] Errore durante l'eliminazione dei chunk dal vectorstore: {e}")

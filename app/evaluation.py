@@ -13,6 +13,7 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge_score import rouge_scorer
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 import nltk
 
 try:
@@ -25,7 +26,6 @@ _semantic_model = None
 def get_semantic_model():
     global _semantic_model
     if _semantic_model is None:
-        # Modello multilingue ottimizzato per similarity
         _semantic_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     return _semantic_model
 
@@ -60,7 +60,7 @@ def compute_context_precision_recall(retrieved_docs, relevant_docs):
 def compute_semantic_similarity(prediction, ground_truth):
     model = get_semantic_model()
     embeddings = model.encode([prediction, ground_truth])
-    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
+    similarity = cosine_similarity(np.array([embeddings[0]]), np.array([embeddings[1]]))[0][0]
     return max(0.0, min(1.0, similarity))
     
 def evaluate_all(prediction, ground_truth, language='italian'):

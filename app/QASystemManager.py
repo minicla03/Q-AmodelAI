@@ -1,7 +1,7 @@
 import os
 import shutil
 from retrival import ask_question
-from ingestion import setup_qa_system, add_document_to_vectorstore
+from ingestion import setup_qa_system, add_document_to_vectorstore, delete_document_from_vectorstore
 
 class QASystemManager:
     '''
@@ -69,4 +69,33 @@ class QASystemManager:
         except Exception as e:
             print(f"[ERROR] Impossibile elencare i documenti: {e}")
             return []
+        
+    def delete_document(self, file_name):
+        """
+        Elimina un documento PDF dalla directory e i suoi chunk dal vectorstore.
+        
+        Args:
+            file_name (str): Il nome del file (es. "Android.pdf") da eliminare.
+        """
+        file_path = os.path.join(self.pdf_path, file_name)
+        
+        if not os.path.exists(file_path):
+            print(f"[ERROR] Il documento '{file_name}' non esiste nella directory dei PDF.")
+            return False
+
+        print(f"[DEBUG] Eliminazione documento: {file_path}")
+        try:
+            # 1. Elimina i chunk dal vectorstore
+            delete_document_from_vectorstore(file_name, persist_dir=self.persist_dir)
+            os.remove(file_path)
+            print(f"[DEBUG] Documento '{file_name}' eliminato fisicamente.")
+            
+            self.close()
+            self._initialize(force_rebuild=False)
+            print(f"[DEBUG] QA System ricaricato dopo l'eliminazione.")
+            return True
+        except Exception as e:
+            print(f"[ERROR] Errore durante l'eliminazione del documento: {e}")
+            return False
+
 
