@@ -66,7 +66,7 @@ python ui.py
 | `QASystemManager.py`   | Gestione vectorstore e logica di sistema                         |
 | `ingestion.py`         | Parsing PDF, chunking e persistenza con Chroma                   |
 | `retrival.py`          | Recupero documenti e costruzione risposte                        |
-| `evaluation_script.py` | Testing automatico delle risposte (metriche NLP)                 |
+| `evaluation_script.py` | Testing automatico delle risposte               |
 | `qa_utils.py`          | Utility di pulizia, rilevamento lingua, ecc.                     |
 
 ---
