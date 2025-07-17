@@ -1,6 +1,9 @@
 '''
-Utility functions for question-answering tasks using LangChain.
-This module provides functions to clean text, ask questions, and handle responses.
+Funzioni di utilità per la gestione delle domande e risposte.
+Queste funzioni includono:
+- detect_language_from_query: per rilevare la lingua della domanda basata su parole chiave.
+- clean_text: per pulire il testo rimuovendo spazi e caratteri non necessari.
+- LANGUAGE_ALIASES: un dizionario per mappare le lingue a nomi alternativi.
 '''
 
 import re
@@ -14,10 +17,10 @@ LANGUAGE_ALIASES = {
 }
 
 def clean_text(text):
-    text = text.replace('\n', ' ').replace('\t', ' ')
-    text = ' '.join(text.split())
-    return text
-
+    #text = text.replace('\n', ' ').replace('\t', ' ')
+    #text = ' '.join(text.split())
+    text = re.sub(r'\s+', ' ', text)
+    return text.split
 
 def detect_language_from_query(query):
     query_lower = query.lower()

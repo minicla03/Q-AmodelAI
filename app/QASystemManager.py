@@ -85,7 +85,6 @@ class QASystemManager:
 
         print(f"[DEBUG] Eliminazione documento: {file_path}")
         try:
-            # 1. Elimina i chunk dal vectorstore
             delete_document_from_vectorstore(file_name, persist_dir=self.persist_dir)
             os.remove(file_path)
             print(f"[DEBUG] Documento '{file_name}' eliminato fisicamente.")

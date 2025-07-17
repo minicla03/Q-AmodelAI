@@ -1,0 +1,193 @@
+#chucnk_dim=200 overlap=70
+
+Test #1
+Domanda: Cosa sono i servizi in Android?
+Risposta attesa:
+I servizi in Android sono componenti che eseguono operazioni in background senza mostrare un'interfaccia. Possono continuare a funzionare anche se l'app non è visibile. Ci sono tipi diversi come Started Service (avviato da un componente), Bound Service (permette a componenti di connettersi) e Foreground Service (che l'utente nota). Hanno un ciclo di vita gestito da metodi come onCreate(), onStartCommand(), onBind() e onDestroy().
+Risposta modello:
+I servizi sono una parte essenziale del sistema operativo Android. I servizi sono delle applicazioni che si eseguono su un dispositivo Android e che possono essere utilizzate da un utente. I servizi sono un modo per che gli sviluppatori possono fornire ai loro utenti funzionalità e servizi specifici per il loro dispositivo.
+Metriche:
+  - F1: 0.159
+  - BLEU: 0.009
+  - ROUGE-L: 0.224
+  - Semantic Similarity: 0.7250469923019409
+  - Context Precision: 1.000
+  - Context Recall: 1.000
+------------------------------------------------------------
+
+Test #2
+Domanda: Cos'è un'activity?
+Risposta attesa:
+Un'activity in Android è una schermata con cui l'utente interagisce. È una classe che gestisce il ciclo di vita con metodi come onCreate(), onStart(), onResume(), onPause(), onStop() e onDestroy(). Le activity comunicano tramite Intent e si dichiarano nel file AndroidManifest.xml. Un'app può avere più activity con scopi diversi.
+Risposta modello:
+Un'attività è un'unità di lavoro che può essere eseguita da un solo compito.
+Metriche:
+  - F1: 0.122
+  - BLEU: 0.000
+  - ROUGE-L: 0.094
+  - Semantic Similarity: 0.47145548462867737
+  - Context Precision: 0.500
+  - Context Recall: 1.000
+------------------------------------------------------------
+
+Test #3
+Domanda: A cosa serve il manifest.xml?
+Risposta attesa:
+Il file AndroidManifest.xml è essenziale per configurare un'app Android. Contiene informazioni su tutti i componenti come activity, servizi, e permessi richiesti. Definisce quale activity è quella principale e può specificare filtri per gli intent. Si trova nella cartella principale del progetto.
+Risposta modello:
+Il manifest.xml serve a definire le dipendenze, i plugin e le configurazioni di base per un progetto Android. In altre parole, è un file che fornisce informazioni per la generazione del pom.xml, che è un file che definisce le risorse e le configurazioni del progetto Android.
+Metriche:
+  - F1: 0.265
+  - BLEU: 0.016
+  - ROUGE-L: 0.230
+  - Semantic Similarity: 0.7968312501907349
+  - Context Precision: 0.500
+  - Context Recall: 1.000
+------------------------------------------------------------
+
+Test #4
+Domanda: Cos'è il modello a cascata in ingegneria del software?
+Risposta attesa:
+Il modello a cascata è un metodo di sviluppo software in cui le fasi seguono un ordine preciso e lineare: analisi dei requisiti, progettazione, implementazione, test, rilascio e manutenzione. Ogni fase si completa prima di iniziare la successiva, senza tornare indietro. È semplice da gestire ma poco flessibile ai cambiamenti.
+Risposta modello:
+Il contesto non fornisce informazioni sul modello a cascata in ingegneria del software, quindi non posso fornire una risposta alla questa domanda.
+Metriche:
+  - F1: 0.193
+  - BLEU: 0.012
+  - ROUGE-L: 0.143
+  - Semantic Similarity: 0.35262003540992737
+  - Context Precision: 0.500
+  - Context Recall: 1.000
+------------------------------------------------------------
+
+Test #5
+Domanda: Cos'è il pattern Observer in ingegneria del software?
+Risposta attesa:
+Il pattern Observer è un modello che definisce una relazione uno-a-molti tra oggetti. Quando un oggetto cambia stato, tutti gli oggetti osservatori vengono aggiornati automaticamente. Prevede un'interfaccia Observer con un metodo update() e un Subject che gestisce la lista degli osservatori. È utile per sistemi reattivi e notifiche.
+Risposta modello:
+Il pattern Observer è un pattern di design per il software che consente di registrare e di notificare un'altra componente del sistema quando un evento o un cambiamento di stato si verifica.
+Metriche:
+  - F1: 0.250
+  - BLEU: 0.072
+  - ROUGE-L: 0.198
+  - Semantic Similarity: 0.8869298100471497
+  - Context Precision: 1.000
+  - Context Recall: 1.000
+------------------------------------------------------------
+
+Test #6
+Domanda: Come è strutturata una classe di testing?
+Risposta attesa:
+Una classe di testing serve a verificare il funzionamento del codice ed è organizzata in tre parti: 1. Setup, con metodi come setUp() o annotazioni @Before per preparare l'ambiente; 2. Test, dove si usano metodi con assertion per controllare i risultati; 3. Teardown, con metodi come tearDown() o @After per pulire le risorse. Si possono usare mock per isolare dipendenze e si applica il principio AAA (Arrange-Act-Assert). Framework comuni sono JUnit, pytest e Espresso.
+Risposta modello:
+La struttura di una classe di testing non viene descritta nel contesto, quindi non posso fornire una risposta a questa domanda.
+Metriche:
+  - F1: 0.122
+  - BLEU: 0.006
+  - ROUGE-L: 0.103
+  - Semantic Similarity: 0.5226238965988159
+  - Context Precision: 1.000
+  - Context Recall: 1.000
+------------------------------------------------------------
+
+Test #7
+Domanda: What is the purpose of an oscilloscope?
+Risposta attesa:
+An oscilloscope is an electronic instrument that shows how voltage signals change over time. It helps engineers see signal features like frequency, amplitude, and shape. Modern oscilloscopes capture analog and digital signals and offer tools like triggering and measurements. They are essential for debugging and testing electronic circuits.
+Risposta modello:
+L'obiettivo dell'oscilloscope è di visualizzare il comportamento temporale di un segnale o di un insieme di segnali. 
+Un oscilloscope consente di osservare le variazioni del valore del segnale in un momento specifico, mostrando come queste variazioni si sono verificate nel tempo.
+Metriche:
+  - F1: 0.061
+  - BLEU: 0.005
+  - ROUGE-L: 0.044
+  - Semantic Similarity: 0.7068016529083252
+  - Context Precision: 0.000
+  - Context Recall: 0.000
+------------------------------------------------------------
+
+Test #8
+Domanda: Explain the concept of RMS voltage.
+Risposta attesa:
+RMS voltage (Root Mean Square) is a way to express the effective value of an AC voltage. It is calculated by taking the square root of the average of the squared instantaneous voltages over one cycle. For a sine wave, RMS equals the peak voltage divided by √2 (about 0.707 times the peak). RMS values relate AC voltage to the equivalent DC power and are the standard for measurements.
+Risposta modello:
+The context does not provide any information about RMS voltage, so I cannot answer this question from the provided context.
+Metriche:
+  - F1: 0.119
+  - BLEU: 0.002
+  - ROUGE-L: 0.111
+  - Semantic Similarity: 0.4542536735534668
+  - Context Precision: 1.000
+  - Context Recall: 0.500
+------------------------------------------------------------
+
+Test #9
+Domanda: ¿Qué es el análisis exploratorio de datos?
+Risposta attesa:
+El análisis exploratorio de datos (EDA) es un método para resumir y entender las características principales de un conjunto de datos. Incluye estadísticas descriptivas como media y desviación estándar, visualizaciones como histogramas y gráficos de dispersión, y la detección de patrones o anomalías. EDA es importante antes de aplicar modelos complejos para conocer la estructura y calidad de los datos.
+Risposta modello:
+L'analisi exploratoria di dati è un processo che consente di analizzare le caratteristiche principali di un insieme di dati. Si basa su un'analisi sistematica e completa delle caratteristiche di ogni feature, fornendo un'immagine completa del loro valore e delle loro relazioni tra loro.
+Metriche:
+  - F1: 0.053
+  - BLEU: 0.004
+  - ROUGE-L: 0.035
+  - Semantic Similarity: 0.6896660327911377
+  - Context Precision: 1.000
+  - Context Recall: 1.000
+------------------------------------------------------------
+
+Test #10
+Domanda: ¿Para qué sirve la regresión lineal?
+Risposta attesa:
+La regresión lineal es una técnica para modelar la relación entre una variable dependiente y una o más variables independientes. Permite predecir valores y medir la fuerza de esa relación. Hay regresión simple (una variable) y múltiple (varias variables). Se usa en economía, ciencias sociales y machine learning, bajo supuestos como linealidad y normalidad de errores.
+Risposta modello:
+La regresión lineare è un metodo di analisi che consente di trovare una relazione lineare tra due variabili statistiche. 
+La regresión lineare è utilizzata quando i dati sono non linearmente separabili e quando si desidera ottenere un modello che meglio descriva la relazione tra le due variabili.
+Metriche:
+  - F1: 0.070
+  - BLEU: 0.008
+  - ROUGE-L: 0.126
+  - Semantic Similarity: 0.8857744932174683
+  - Context Precision: 1.000
+  - Context Recall: 0.500
+------------------------------------------------------------
+
+Test #11
+Domanda: Qu'est-ce que le big data?
+Risposta attesa:
+Le big data désigne de très grands ensembles de données caractérisés par cinq aspects : volume, vélocité, variété, véracité et valeur. Ces données dépassent les capacités des outils traditionnels et nécessitent des technologies spécifiques comme Hadoop ou Spark. Le big data est utilisé pour l’analyse prédictive, la personnalisation et d’autres domaines, avec des défis liés au stockage et à la sécurité.
+Risposta modello:
+Le big data sono un insieme di dati che sono così grandi e completi che non possono essere memorizzati da un singolo sistema. I big data sono generati da diverse fonti, come i sensori, i social network e i sistemi aziendali. Le big data possono essere utilizzate per diverse sfide, come la ricerca, la prevision e la gestione del rischio.
+Metriche:
+  - F1: 0.086
+  - BLEU: 0.057
+  - ROUGE-L: 0.116
+  - Semantic Similarity: 0.8615927696228027
+  - Context Precision: 0.500
+  - Context Recall: 1.000
+------------------------------------------------------------
+
+Test #12
+Domanda: À quoi sert une analyse prédictive?
+Risposta attesa:
+L’analyse prédictive utilise des données historiques et des algorithmes pour prévoir des événements futurs. Elle emploie des méthodes comme la régression et les arbres de décision. Ses applications incluent la prévision de la demande, la détection de fraudes et le marketing ciblé. Le processus comprend la collecte, la préparation des données, l’entraînement des modèles et la validation.
+Risposta modello:
+L'analisi preditiva serve per predire il risultato di un evento futuro basandosi su dati precedenti.
+Metriche:
+  - F1: 0.024
+  - BLEU: 0.000
+  - ROUGE-L: 0.023
+  - Semantic Similarity: 0.7984267473220825
+  - Context Precision: 0.000
+  - Context Recall: 0.000
+------------------------------------------------------------
+
+
+Metriche medie su tutti i test:
+
+F1: 0.127
+BLEU: 0.016
+ROUGE-L: 0.121
+Semantic Similarity: 0.679
+Context Precision: 0.667
+Context Recall: 0.750

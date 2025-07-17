@@ -1,6 +1,12 @@
+'''
+Script per valutare un sistema di domande e risposte su un set di test predefinito.
+Utilizza il QASystemManager per gestire le operazioni QA e calcola le metriche di performance.
+'''
+
 from QASystemManager import QASystemManager
 from evaluation import evaluate_all, compute_context_precision_recall
 
+# Inizializza il gestore del sistema QA
 manager = QASystemManager()
 
 if not manager.is_ready():
@@ -9,8 +15,10 @@ if not manager.is_ready():
 
 print("Inizio valutazione su test set...\n")
 
+# Lista per memorizzare i risultati delle metriche
 results = []
 
+# Definisce i casi di test
 TEST_CASES = [
     {
         "query": "Cosa sono i servizi in Android?",
@@ -147,6 +155,10 @@ TEST_CASES = [
 ]
 
 with open("metriche_medie.txt", "w", encoding="utf-8") as f:
+    '''
+    Esegue i test definiti in TEST_CASES e calcola le metriche di performance.
+    I risultati vengono stampati a console e salvati in un file di testo.
+    '''
     for idx, test in enumerate(TEST_CASES, 1):
         query = test["query"]
         expected = test["expected_answer"]
@@ -154,12 +166,14 @@ with open("metriche_medie.txt", "w", encoding="utf-8") as f:
         relevant_docs = test.get("relevant_docs", [])
 
         prediction, source_docs = manager.ask(query, language=lang)
+        # Filtra i documenti pertinenti in base ai metadati
         if isinstance(prediction, dict):
             output_text = prediction.get("output_text", "")
         else:
             output_text = str(prediction)
         retrieved_sources = [doc.metadata.get("source") for doc in source_docs if doc.metadata.get("source")]
 
+        # Calcola le metriche di performance
         qa_scores = evaluate_all(output_text, expected, language=lang)
         context_precision, context_recall = compute_context_precision_recall(retrieved_sources, relevant_docs)
 

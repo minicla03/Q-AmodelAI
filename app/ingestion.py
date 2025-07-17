@@ -21,7 +21,8 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
         if os.path.exists(persist_dir):
             shutil.rmtree(persist_dir)
             print(f"[DEBUG] Rebuilding vector store...")
-        
+
+        print(f"[DEBUG] Creazione del vector store da PDF in {pdf_path}")  
         documents = []
         for filename in os.listdir(pdf_path):
             if filename.endswith(".pdf"):
@@ -30,13 +31,29 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
                 docs = loader.load()
                 for doc in docs:
                     doc.metadata["source"] = filename  # Imposta solo il nome del file come fonte
-                    if clean_text(doc.page_content).strip():
-                        documents.append(doc)
+                    documents.append(doc)
+                    #if clean_text(doc.page_content):
+                    #    documents.append(doc)
         
+        # chunck dei documenti Invece di tagliare semplicemente 
+        # il testo a una lunghezza fissa, utilizza una 
+        # gerarchia di separatori predefiniti per trovare i punti di 
+        # divisione più naturali. 
+        # I separatori di default sono ["\n\n", "\n", " ", ""], il che significa che proverà prima a dividere sui 
+        # paragrafi (doppio newline), poi sulle righe singole, poi sugli spazi, 
+        # e infine sui caratteri individuali come ultima risorsa.
         splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200)
         chunks = splitter.split_documents(documents)
+        print(chunks[:2])
         
+        # creazione degli embedding
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+        print("[DEBUG] HuggingFaceEmbeddings object created")
+
+        sample_texts = [chunk.page_content for chunk in chunks[:2]]
+        sample_embeddings = embeddings.embed_documents(sample_texts)
+        print("[DEBUG] Sample embeddings:", sample_embeddings)
+
         vectorstore = Chroma.from_documents(chunks, embeddings, persist_directory=persist_dir)
         print(f"[DEBUG] Vector store created with {len(chunks)} chunks")
         
@@ -48,6 +65,8 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
     llm = ChatOllama(model="llama3:latest", temperature=0.1, top_p=0.95, top_k=40)
     retriever = vectorstore.as_retriever(search_type="similarity", k=3)
     
+    # factory method che crea automaticamente una catena preconfigurata, semplificando  
+    # la configurazione rispetto alla creazione manuale di tutti i componenti.
     qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
     return qa_chain
 
@@ -78,7 +97,10 @@ def delete_document_from_vectorstore(file_name, persist_dir="chroma_db"):
     """
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     vectorstore = Chroma(persist_directory=persist_dir, embedding_function=embeddings)
-
+    
+    if file_name.endswith(".pdf"):
+        file_name = os.path.splitext(file_name)[0]
+    
     try:
         ids_to_delete = []
         docs_in_store = vectorstore.get()
