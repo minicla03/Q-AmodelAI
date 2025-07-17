@@ -16,6 +16,15 @@ class QASystemManager:
         self._initialize()
 
     def _initialize(self, force_rebuild=False):
+        '''
+        Inizializza il sistema QA, creando o caricando il vector store.
+        Args:
+            force_rebuild (bool): Se True, ricrea il sistema QA anche se esiste già.
+        Returns:
+            None
+        Raises:
+            Exception: Se si verifica un errore durante l'inizializzazione.
+        '''
         try:
             self.qa_chain = setup_qa_system(self.pdf_path, self.persist_dir, force_rebuild=force_rebuild)
             self.ready = True
@@ -25,9 +34,22 @@ class QASystemManager:
             self.ready = False
 
     def is_ready(self):
+        '''
+        Verifica se il sistema QA è pronto per rispondere alle domande.
+        '''
         return self.ready
 
     def ask(self, query, language="italian"):
+        '''
+        Risponde a una domanda utilizzando il sistema QA.
+        Args:
+            query (str): La domanda a cui rispondere.
+            language (str): La lingua della risposta.
+            Returns:
+                tuple: La risposta generata e i documenti di origine utilizzati.
+        Raises:
+            Exception: Se il sistema QA non è pronto o si verifica un errore durante la richiesta.
+        '''
         if not self.qa_chain:
             return "Sistema QA non pronto", []
         return ask_question(self.qa_chain, query, language)
@@ -54,6 +76,9 @@ class QASystemManager:
         self._initialize(force_rebuild=False)
 
     def close(self):
+        '''
+        Chiude il sistema QA, liberando le risorse.
+        '''
         if self.qa_chain:
             self.qa_chain = None
     

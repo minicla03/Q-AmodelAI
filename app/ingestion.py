@@ -1,8 +1,8 @@
 '''
-This module handles the ingestion of data from pdf documents that
-will be used to create a knowledge base for the application.
-It includes functions to extract text from PDF files, process the text,
-create embeddings, and store the data in a vector store.
+Questo modulo gestisce l'ingestione dei dati da documenti PDF che
+verranno utilizzati per creare una base di conoscenza per l'applicazione.
+Include funzioni per estrarre testo dai file PDF, processare il testo,
+creare embedding e memorizzare i dati in un vector store.
 '''
 
 import shutil
