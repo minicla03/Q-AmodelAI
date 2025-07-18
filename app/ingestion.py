@@ -74,9 +74,7 @@ def add_document_to_vectorstore(file_path, persist_dir="chroma_db"):
     Aggiunge un nuovo documento PDF al vectorstore Chroma esistente.
     """
     print(f"[DEBUG] Caricamento documento: {file_path}")
-    file_name = os.path.basename(file_path)
-    file_name = os.path.join("data", file_name)
-    loader = PyPDFLoader(file_name)
+    loader = PyPDFLoader(file_path)
     documents = loader.load()
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200)
