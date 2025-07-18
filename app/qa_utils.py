@@ -17,9 +17,8 @@ LANGUAGE_ALIASES = {
 }
 
 def clean_text(text):
-    #text = text.replace('\n', ' ').replace('\t', ' ')
-    #text = ' '.join(text.split())
-    text = re.sub(r'\s+', ' ', text)
+    text = text.replace('\n', ' ').replace('\t', ' ')
+    text = ' '.join(text.split())
     return text.split
 
 def detect_language_from_query(query):

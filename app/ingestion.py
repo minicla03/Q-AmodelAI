@@ -31,9 +31,8 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
                 docs = loader.load()
                 for doc in docs:
                     doc.metadata["source"] = filename  # Imposta solo il nome del file come fonte
-                    documents.append(doc)
-                    #if clean_text(doc.page_content):
-                    #    documents.append(doc)
+                    if clean_text(doc.page_content):
+                        documents.append(doc)
         
         # chunck dei documenti Invece di tagliare semplicemente 
         # il testo a una lunghezza fissa, utilizza una 
@@ -44,13 +43,13 @@ def setup_qa_system(pdf_path="data", persist_dir="chroma_db", force_rebuild=Fals
         # e infine sui caratteri individuali come ultima risorsa.
         splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200)
         chunks = splitter.split_documents(documents)
-        print(chunks[:2])
+        print(chunks[5:7])
         
         # creazione degli embedding
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
         print("[DEBUG] HuggingFaceEmbeddings object created")
 
-        sample_texts = [chunk.page_content for chunk in chunks[:2]]
+        sample_texts = [chunk.page_content for chunk in chunks[:1]]
         sample_embeddings = embeddings.embed_documents(sample_texts)
         print("[DEBUG] Sample embeddings:", sample_embeddings)
 
@@ -75,7 +74,9 @@ def add_document_to_vectorstore(file_path, persist_dir="chroma_db"):
     Aggiunge un nuovo documento PDF al vectorstore Chroma esistente.
     """
     print(f"[DEBUG] Caricamento documento: {file_path}")
-    loader = PyPDFLoader(file_path)
+    file_name = os.path.basename(file_path)
+    file_name = os.path.join("data", file_name)
+    loader = PyPDFLoader(file_name)
     documents = loader.load()
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200)
@@ -97,16 +98,24 @@ def delete_document_from_vectorstore(file_name, persist_dir="chroma_db"):
     """
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     vectorstore = Chroma(persist_directory=persist_dir, embedding_function=embeddings)
+
+     # Metodo più efficiente usando where clause
+    file_name = os.path.splitext(file_name)[0]  # Rimuove l'estensione
+        
+    # Prima verifica quanti documenti ci sono con questo source
+    results = vectorstore.get(where={"source": file_name})
     
-    if file_name.endswith(".pdf"):
-        file_name = os.path.splitext(file_name)[0]
+    if not results['ids']:
+        print(f"[WARNING] Nessun chunk trovato per il file '{file_name}'")
     
     try:
         ids_to_delete = []
         docs_in_store = vectorstore.get()
         
+        target = os.path.splitext(file_name.lower())[0]
         for doc_id, doc_meta in zip(docs_in_store['ids'], docs_in_store['metadatas']):
-            if doc_meta.get("source") == file_name:
+            source = os.path.splitext(doc_meta.get("source", "").lower())[0]
+            if source == target:
                 ids_to_delete.append(doc_id)
 
         print(f"[DEBUG] Trovati {len(ids_to_delete)} chunk da eliminare per il file '{file_name}'")
@@ -114,8 +123,6 @@ def delete_document_from_vectorstore(file_name, persist_dir="chroma_db"):
         if ids_to_delete:
             vectorstore.delete(ids=ids_to_delete)
             print(f"[DEBUG] Eliminati {len(ids_to_delete)} chunk relativi a '{file_name}' dal vectorstore.")
-        else:
-            print(f"[DEBUG] Nessun chunk trovato per il file '{file_name}'.")
 
     except Exception as e:
         print(f"[ERROR] Errore durante l'eliminazione dei chunk dal vectorstore: {e}")
