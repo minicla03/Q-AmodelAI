@@ -1,10 +1,8 @@
+import json
 from abc import ABC
 
-from rag_logic.tools.QATool import QATool
 from persistence.model.Quiz import Quiz
-import json
-
-from rag_logic.utils import json_to_toon, toon_to_json
+from rag_logic.tools.QATool import QATool
 
 
 class QuizTool(QATool, ABC):
@@ -12,10 +10,15 @@ class QuizTool(QATool, ABC):
     def __init__(self):
         super().__init__()
 
-    def execute(self, qa_chain, query, language_hint: str = "italian", toon_format: bool = False, n_questions=5, difficulty="medium"):
+    def execute(self, qa_chain, query, language_hint: str = "italian", toon_format: bool = False, n_questions=5,
+                difficulty="medium"):
 
-        response = super().execute(qa_chain, query, language_hint)
-        filtered_docs = response["docs_source"]
+        filtered_docs = self._retrieve_documents(qa_chain, query)
+
+        if not filtered_docs:
+            return {"type": "QUIZ", "result": [], "ai_response": "Nessun dato"}
+
+        context_text = "\n\n".join([d.page_content for d in filtered_docs])
 
         prompt = f"""
         You are an AI assistant that generates multiple-choice quiz questions from a given text.
@@ -28,17 +31,16 @@ class QuizTool(QATool, ABC):
             - "correct_answer": the correct answer (must be one of the options in answer_list)
             - "difficulty": "{difficulty}"
         - Language: {language_hint}
-        - Respond ONLY in valid JSON format as a list of objects with the fields: question, answer_list, correct_answer, difficulty
-        - answer_list must include 3-4 options: one correct answer and 2-3 plausible distractors it the uses choose hard difficulty. 
+        - Respond ONLY in valid JSON format as a list of objects.
+        - answer_list must include 3-4 options: one correct answer and 2-3 plausible distractors.
         - Avoid obviously wrong answers.
-        - Do not include extra commentary or explanations.
 
-        Text to process: {filtered_docs}
+        Text to process:
+        {context_text}
         """
 
         input_to_chain = {"input_documents": filtered_docs, "question": prompt}
 
-        # Invoca il chain
         response = qa_chain.combine_documents_chain.invoke(
             input=input_to_chain,
             config=None,
@@ -46,12 +48,28 @@ class QuizTool(QATool, ABC):
         )
 
         try:
-            quiz_data = json.loads(response)
-        except Exception:
+            json_str = response["output_text"]
+
+            if "```json" in json_str:
+                json_str = json_str.split("```json")[1].split("```")[0].strip()
+            elif "```" in json_str:
+                json_str = json_str.split("```")[1].split("```")[0].strip()
+
+            quiz_data = json.loads(json_str)
+        except Exception as e:
+            print(f"Errore parsing JSON: {e}")
             raise ValueError("Output non in formato JSON valido")
 
-        quiz = [Quiz(question=qt["question"],answer_list=qt["answer_list"], correct_answer=qt["correct_answer"], difficulty=qt["difficulty"])
-                for qt in quiz_data]
+        quiz = [
+            Quiz(
+                id_notebook=qt["id_notebook"],
+                question=qt["question"],
+                answer_list=qt["answer_list"],
+                correct_answer=qt["correct_answer"],
+                difficulty=qt.get("difficulty", difficulty)
+            )
+            for qt in quiz_data
+        ]
 
         return {
             "type": "QUIZ",

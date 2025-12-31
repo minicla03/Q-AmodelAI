@@ -25,8 +25,10 @@ class FlashcardTool(QATool, ABC):
             flashcard: flashcard
         """
 
-        response = super().execute(qa_chain, query, language_hint)
-        filtered_docs = response["docs_source"]
+        filtered_docs = self._retrieve_documents(qa_chain, query)
+
+        if not filtered_docs:
+            return {"type": "FLASHCARD", "result": [], "ai_response": "Nessun dato"}
 
         prompt = f"""
             You are an AI assistant that generates study flashcards from a given text. 
@@ -60,8 +62,13 @@ class FlashcardTool(QATool, ABC):
         )
 
         try:
-            flashcards_data = json.loads(response)
-        except Exception:
+            json_str = response["output_text"]
+            json_str = json_str.replace("```json", "").replace("```", "").strip()
+
+            flashcards_data = json.loads(json_str)
+        except Exception as e:
+            print(f"Errore parsing JSON: {e}")
+            print(f"Risposta grezza: {response.get('output_text', 'KeyError')}")
             raise ValueError("Output non in formato JSON valido")
 
         flashcard = [Flashcard(answer=ft["answer"], question=ft["question"]) for ft in flashcards_data]

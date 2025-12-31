@@ -6,22 +6,27 @@ class QATool(IToolStrategy):
     def __init__(self):
         super().__init__()
 
+    def _retrieve_documents(self, qa_chain, user_query, max_sources=3, similarity_threshold=0.75):
+
+        vectorstore = qa_chain.retriever.vectorstore
+
+        # Retrieval
+        retrieved_docs_with_scores = vectorstore.similarity_search_with_score(user_query, k=10)
+
+        # Filtering
+        filtered_docs = []
+        for doc, score in retrieved_docs_with_scores:
+            if score >= similarity_threshold:
+                filtered_docs.append(doc)
+
+        return filtered_docs[:max_sources]
+
     def execute(self, qa_chain, query: dict, language_hint="italian", toon_format: bool = False, max_sources=3, similarity_threshold=0.75):
 
-        # Esegue una ricerca nel vectorstore per ottenere i documenti pertinenti ricercando per similarità
         user_query = query["user_query"]
         summary = query["summary"]
 
-        vectorstore = qa_chain.retriever.vectorstore
-        retrieved_docs_with_scores = vectorstore.similarity_search_with_score(user_query, k=10)
-
-        # Filtra i documenti recuperati in base alla soglia di similarità
-        filtered_docs_with_scores = [(doc, score) for doc, score in retrieved_docs_with_scores if
-                                     score >= similarity_threshold]
-        # Limita il numero di documenti a quelli richiesti
-        filtered_docs_with_scores = filtered_docs_with_scores[:max_sources]
-        # Estrae solo i documenti filtrati
-        filtered_docs = [doc for doc, _ in filtered_docs_with_scores]
+        filtered_docs = self._retrieve_documents(qa_chain, user_query, max_sources, similarity_threshold)
 
         if not filtered_docs:
             return {
