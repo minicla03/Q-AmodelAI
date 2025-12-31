@@ -4,9 +4,7 @@ import os
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-from langchain_ollama import ChatOllama
 from langchain_classic.chains import RetrievalQA
-#from langchain.chains.retrieval import create_retrieval_chain
 
 from rag_logic.ingestion.DocumentLoaderStrategy import *
 from rag_logic.llm.LLM import LLM
@@ -157,22 +155,21 @@ class IngestionFlow(object):
         file_name = os.path.splitext(file_name)[0]
 
         try:
-            docs_in_store = self.vectorstore.get()
+            results = self.vectorstore.get(include=["metadatas"])
             ids_to_delete = []
 
-            for doc_id, doc_meta in zip(docs_in_store.get("ids", []), docs_in_store.get("metadatas", [])):
-                source = os.path.splitext(doc_meta.get("source", "").lower())[0]
-                if source == file_name:
-                    ids_to_delete.append(doc_id)
+            target_name = os.path.basename(file_name)
 
-            if not ids_to_delete:
-                logger.info(f"No chunks found for '{file_name}'. Nothing to delete.")
-                return
+            for i, meta in enumerate(results["metadatas"]):
+                source_path = meta.get("source", "")
+                if os.path.basename(source_path) == target_name:
+                    ids_to_delete.append(results["ids"][i])
 
-            self.vectorstore.delete(ids=ids_to_delete)
-            logger.info(f"Deleted {len(ids_to_delete)} chunks for file '{file_name}' from vectorstore.")
+            if ids_to_delete:
+                self.vectorstore.delete(ids=ids_to_delete)
+                logger.info(f"Eliminati {len(ids_to_delete)} chunk per il file '{target_name}'")
+            else:
+                logger.warning(f"Nessun chunk trovato per '{target_name}'")
 
-        except ValueError as ve:
-            logger.exception(ve)
         except Exception as e:
-            logger.exception(e)
+            logger.exception(f"Errore cancellazione: {e}")
