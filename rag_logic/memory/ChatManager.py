@@ -31,37 +31,36 @@ class ChatManager:
 
     MIN_MESSAGES_FOR_SUMMARY = 5
 
-    def __init__(self, user_id, notebook_id, chat_id, document_path="docs", persist_dir="chroma_db"):
-        """
-        Initializes the Notebook with paths and user information.
+    def __init__(
+            self,
+            user_id: str,
+            notebook_id: str,
+            chat_id: str,
+            notebook_repo: IRepos.INotebookRepository,
+            chat_repo: IRepos.IChatRepository,
+            ingestion_flow,
+            document_path: str = "docs"
+    ):
 
-        Args:
-            user_id (str): The unique identifier for the user.
-            document_path (str, optional): Directory where documents are stored. Defaults to "data".
-            persist_dir (str, optional): Directory for the vector store persistence. Defaults to "chroma_db".
-        """
-
-        self.user_id: str = user_id
-        self.notebook_id: str = notebook_id
+        self.user_id = user_id
+        self.notebook_id = notebook_id
         self.chat_id = chat_id
-
         self.document_path = document_path
-        self.persist_dir = persist_dir
 
-        self.force_rebuild : bool = False
+        # Iniezione delle dipendenze
+        self.notebook_repository = notebook_repo
+        self.chat_repository = chat_repo
+        self.ingestion_layer = ingestion_flow
+
         self.last_summary = ""
-        self.ingestion_layer = None
+        self.ready = True
 
         try:
-            self.chat_repository: IRepos.IChatRepository = ChatRepository(RedisConnectionManager.instance().client)
-            self.notebook_repository: IRepos.INotebookRepository = MongoNotebookRepository(MongoConnectionManager.instance().db)
-            self.ingestion_layer = IngestionFlow(self.notebook_id)
-
-            self.ready = True
-            logger.info(f"Notebook inizializzato correttamente per user {self.user_id}")
+            self.last_summary = self.notebook_repository.get_last_summary(self.chat_id) or ""
+            logger.info(
+                f"ChatManager inizializzato per user {self.user_id} (Summary preesistente: {bool(self.last_summary)})")
         except Exception as e:
-            logger.exception(f"Errore durante l'inizializzazione del notebook per user {self.user_id}: {e}")
-            self.ready = False
+            logger.error(f"Errore recupero summary iniziale: {e}")
 
     def _restart(self):
         """
@@ -72,17 +71,6 @@ class ChatManager:
         self.ready = True
 
     def execute_rag_pipeline(self, user_query, default_language="italian", memory_ability=True, toon_format=False):
-        """
-        Executes the RAG pipeline for the given user query.
-
-        Args:
-            user_query (str): The user's input query.
-            default_language (str, optional): Language to use if detection fails. Defaults to "italian".
-            memory_ability (bool, optional): Whether the RAG pipeline is memory or not (for evaluation).
-            toon_format (bool, optional): Whether the RAG pipeline is toon format (for evaluation).
-        Returns:
-            dict: The response from the RAG pipeline, including AI answer and metadata.
-        """
 
         logger.info("Avvio pipeline RAG per query utente: %s", user_query)
 
@@ -97,24 +85,27 @@ class ChatManager:
         language = detect_language_from_query(user_query) or default_language
         logger.info("Lingua rilevata: %s", language)
 
-        if not self.ingestion_layer.qa_chain:
+        if not self.ingestion_layer or not self.ingestion_layer.qa_chain:
             logger.warning("Pipeline RAG non pronta")
             return {"error": "Sistema QA non pronto", "ai_response": None}
 
-        tool = router_agent(user_query, toon_format,language)
-        logger.info("Tool selezionato dal router: %s", tool)
-        context = ContextFactory.create(tool)
-        logger.info("Contesto creato correttamente per tool: %s", context)
+        tool_name = router_agent(user_query, toon_format, language)
+        logger.info(f"Tool selezionato dal router: {tool_name}")
+
+        context = ContextFactory.create(tool_name)
+        if not context:
+            logger.error(f"ContextFactory ha restituito None per il tool '{tool_name}'")
+            return {"error": f"Tool '{tool_name}' non supportato o errore di creazione", "ai_response": None}
 
         if memory_ability:
-            history_mex = self.chat_repository.get_messages(self.chat_id)
-
-            if len(history_mex) >= ChatManager.MIN_MESSAGES_FOR_SUMMARY:
-                logger.info("Generazione del sommario delle conversazioni precedenti...")
-                self.last_summary = summary_agent(history_mex, toon_format, language_hint="italian")
-                logger.info("Sommario aggiornato.")
-            else:
-                self.last_summary = self.notebook_repository.get_last_summary(self.chat_id)
+            try:
+                history_mex = self.chat_repository.get_messages(self.chat_id)
+                if len(history_mex) >= self.MIN_MESSAGES_FOR_SUMMARY:
+                    logger.info("Aggiornamento summary conversazione...")
+                    self.last_summary = summary_agent(history_mex, toon_format, language_hint=language)
+                    logger.info("Summary aggiornato.")
+            except Exception as e:
+                logger.warning(f"Errore durante l'aggiornamento del summary: {e}")
 
         query={
             "user_query": user_query,
@@ -140,111 +131,83 @@ class ChatManager:
                 "ai_response": None
             }
 
-    def add_document(self, file_path):
-        """
-        Adds a new document to the vector store and repository.
-
-        Args:
-            file_path (str): Path to the document to add.
-        """
-
-        os.makedirs(self.document_path, exist_ok=True)
-
-        print(f"[DEBUG] Aggiunta documento: {file_path}")
-
-        dest_path = os.path.join(self.document_path, os.path.basename(file_path))
-        if not os.path.exists(dest_path):
-            shutil.copy(file_path, dest_path)
-        print(f"[DEBUG] Documento copiato in: {dest_path}")
-
-        try:
-            self.ingestion_layer.add_document_to_vectorstore(file_path)
-            self.notebook_repository.update_chat_metadata(self.notebook_id, self.chat_id, docs=[file_path])
-            print(f"[DEBUG] Documento aggiunto al vectorstore con successo")
-        except Exception as e:
-            print(f"[ERROR] Errore durante l'aggiunta al vectorstore: {e}")
+    def add_document(self, file_path: str):
+        if not os.path.exists(file_path):
+            logger.error(f"File non trovato: {file_path}")
             return
 
-    def delete_document(self, file_name):
-        """
-        Deletes a document from the directory and its chunks from the vector store.
+        try:
+            os.makedirs(self.document_path, exist_ok=True)
 
-        Args:
-            file_name (str): Name of the file to delete (e.g., "Android.pdf").
+            file_name = os.path.basename(file_path)
+            dest_path = os.path.join(self.document_path, file_name)
 
-        Returns:
-            bool: True if deletion was successful, False otherwise.
-        """
+            if os.path.abspath(file_path) != os.path.abspath(dest_path):
+                shutil.copy(file_path, dest_path)
+                logger.info(f"Documento copiato in: {dest_path}")
 
+            self.ingestion_layer.add_document_to_vectorstore(dest_path)
+
+            self.notebook_repository.update_chat_metadata(self.notebook_id, self.chat_id, docs=[dest_path])
+            logger.info(f"Documento '{file_name}' aggiunto e indicizzato con successo.")
+
+        except Exception as e:
+            logger.error(f"Errore durante l'aggiunta del documento '{file_path}': {e}", exc_info=True)
+
+    def delete_document(self, file_name: str) -> bool:
+    
         file_path = os.path.join(self.document_path, file_name)
 
-        if not os.path.exists(file_path):
-            print(f"[ERROR] Il documento '{file_name}' non esiste nella directory dei PDF.")
-            return False
+        logger.info(f"Richiesta eliminazione documento: {file_name}")
 
-        print(f"[DEBUG] Eliminazione documento: {file_path}")
         try:
             self.ingestion_layer.delete_document_from_vectorstore(file_name)
-            os.remove(file_path)
-            #self.chat_repository.delete_documents(self.chat_id, file_path) #todo:mongo
-            print(f"[DEBUG] Documento '{file_name}' eliminato fisicamente.")
+
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                logger.info(f"File fisico '{file_path}' rimosso.")
+            else:
+                logger.warning(f"File fisico '{file_path}' non trovato, impossibile rimuovere.")
+
+            #self.notebook_repository.remove_doc_from_metadata() #Todo()
+
             return True
         except Exception as e:
-            print(f"[ERROR] Errore durante l'eliminazione del documento: {e}")
+            logger.error(f"Errore durante l'eliminazione del documento '{file_name}': {e}", exc_info=True)
             return False
 
-    def list_documents(self):
+    def list_documents(self) -> list:
         """
-        Returns a list of documents currently present in the chat session.
-
-        Returns:
-            list[str]: List of document filenames.
+        Returns a list of documents associated with the notebook.
         """
-
         try:
-            return self.notebook_repository.get_list_docs(self.notebook_id)
+            docs = self.notebook_repository.get_list_docs(self.notebook_id)
+            return docs if docs else []
         except Exception as e:
-            print(f"[ERROR] Impossibile elencare i documenti: {e}")
+            logger.error(f"Errore nel recupero lista documenti: {e}")
             return []
 
-    def is_ready(self):
-        """
-        Checks if the system is ready to process queries.
+    def is_ready(self) -> bool:
+        return self.ready and self.ingestion_layer is not None
 
-        Returns:
-            bool: True if ready, False otherwise.
-        """
+    def close(self):
 
-        return self.ready
-
-    def _close(self):
-        """
-        Closes the chat manager and frees resources, updating chat history in the repository.
-        """
-
-        """
-            Closes the chat manager, persists the last summary, and frees resources.
-            """
         if not self.ready:
-            logger.warning("ChatManager already closed or not initialized.")
+            logger.warning("ChatManager già chiuso o non inizializzato.")
             return
 
         try:
-
             if self.last_summary:
-                self.notebook_repository.update_chat_metadata(self.chat_id, self.last_summary)
-                logger.info(f"Last summary saved for chat {self.chat_id}")
+                self.notebook_repository.update_chat_metadata(self.notebook_id, self.chat_id, summary=self.last_summary)
+                logger.info(f"Ultimo summary salvato per chat {self.chat_id}")
 
             if self.chat_repository:
                 self.chat_repository.reset_chat(self.chat_id)
-                logger.info(f"History chat cancelled for {self.notebook_id}")
+                logger.info(f"Cronologia Redis pulita per chat {self.chat_id}")
 
         except Exception as e:
-            logger.error(f"Error while closing ChatManager for chat {self.chat_id}: {e}")
+            logger.error(f"Errore durante la chiusura del ChatManager: {e}", exc_info=True)
         finally:
-            self.last_summary = ""
-            self.ingestion_layer = None
-            self.notebook_repository = None
-            self.chat_repository = None
             self.ready = False
-            logger.info(f"ChatManager closed for chat {self.chat_id}")
+            self.ingestion_layer = None
+            logger.info(f"ChatManager chiuso correttamente.")
