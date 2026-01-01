@@ -1,6 +1,10 @@
+import datetime
 import glob
 import logging
 import os
+
+from langchain_classic.retrievers import ContextualCompressionRetriever
+from langchain_classic.retrievers.document_compressors import CohereRerank
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
@@ -42,8 +46,8 @@ class IngestionFlow(object):
                     embedding_function=self.embeddings,
                     persist_directory=self.persist_dir)
 
-        self.retriever_vs = self.vectorstore.as_retriever(search_type="similarity", k=3)
-        self.splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200)
+        self.retriever_vs = RetrievalBuilder.build(self.vectorstore)
+        self.splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200, separators=["\n\n", "\n", ". ", " ", ""])
         self.llm = LLM() #ChatOllama(model="llama3:latest", temperature=0.1, top_p=0.95, top_k=40)
         self.qa_chain = RetrievalQA.from_chain_type(llm=self.llm, retriever=self.retriever_vs, return_source_documents=True)
         #self.qa_chain = create_retrieval_chain(self.retriever_vs, self.llm)
@@ -74,7 +78,7 @@ class IngestionFlow(object):
             persist_directory=self.persist_dir
         )
 
-        self.retriever_vs = self.vectorstore.as_retriever(search_type="similarity", k=3)
+        self.retriever_vs = RetrievalBuilder.build(self.vectorstore)
         self.qa_chain.retriever = self.retriever_vs
         logger.info("Vectorstore ricaricato con successo.")
         return True
@@ -103,14 +107,40 @@ class IngestionFlow(object):
 
         documents = strategy.load(file_path)
 
-        for doc in documents:
-            if "source" not in doc.metadata:
-                doc.metadata["source"] = file_path
+        chunks = []
 
-        chunks = self.splitter.split_documents(documents)
+        for doc_idx, doc in enumerate(documents):
+            doc.metadata.update(
+                {
+                    "document_id": f"doc_{doc_idx:03d}",
+                    "source": file_path,
+                    "page_number": doc_idx + 1,
+                    "total_pages": len(documents),
+                    "load_timestamp": datetime.datetime.now().isoformat(),
+                    "content_length": len(doc.page_content),
+                    "content_preview": doc.page_content[:100]
+                                       + ("..." if len(doc.page_content) > 100 else ""),
+                }
+            )
+
+            chunks = self.splitter.split_documents([doc])
+
+            for chunk_idx, chunk in enumerate(chunks):
+                chunk.metadata.update(
+                    {
+                        "chunk_id": f"{doc.metadata['document_id']}_chunk_{chunk_idx:03d}",
+                        "chunk_index": chunk_idx,
+                        "total_chunks_in_doc": len(chunks),
+                        "chunk_size": len(chunk.page_content),
+                        "overlap_info": "overlap_200_chars"
+                        if chunk_idx > 0
+                        else "no_overlap",
+                    }
+                )
+                chunks.append(chunk)
 
         if not chunks:
-            logger.warning(f"No chunks generated from document '{file_path}'.")
+            logger.warning(f"Nessun chunk generato da '{file_path}'.")
             return
 
         self.vectorstore.add_documents(chunks)
@@ -118,14 +148,6 @@ class IngestionFlow(object):
         logger.info(f"Added {len(chunks)} chunks from '{file_path}' to vectorstore.")
 
     def add_documents_from_folder(self, folder_path: str):
-        """
-        Aggiunge tutti i documenti presenti in una cartella al vectorstore.
-        Solo i file con estensioni supportate (.pdf, .docx, .txt, .html, .url, .csv)
-        verranno processati.
-
-        Args:
-            folder_path (str): Percorso della cartella contenente i documenti.
-        """
         if not os.path.exists(folder_path):
             raise FileNotFoundError(f"Cartella '{folder_path}' non trovata.")
 
@@ -145,13 +167,6 @@ class IngestionFlow(object):
             logger.info(f"Aggiunti {files_added} file da '{folder_path}' al vectorstore.")
 
     def delete_document_from_vectorstore(self, file_name: str):
-        """
-        Deletes all chunks associated with a specific file from the Chroma vector store.
-
-        Args:
-            file_name (str): The name of the source file to remove.
-        """
-
         file_name = os.path.splitext(file_name)[0]
 
         try:
@@ -173,3 +188,22 @@ class IngestionFlow(object):
 
         except Exception as e:
             logger.exception(f"Errore cancellazione: {e}")
+
+class RetrievalBuilder:
+    @staticmethod
+    def build(vectorstore):
+        base_retriever = vectorstore.as_retriever(
+            search_type="similarity",
+            search_kwargs={"k": 20},
+        )
+
+        # cross-encoder
+        compressor = CohereRerank(
+            model="rerank-multilingual-v3.0",
+            top_n=5,
+        )
+
+        return ContextualCompressionRetriever(
+            base_retriever=base_retriever,
+            base_compressor=compressor,
+        )
