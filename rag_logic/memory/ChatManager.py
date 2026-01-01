@@ -114,7 +114,7 @@ class ChatManager:
 
         try:
             logger.info("Esecuzione catena RAG con il contesto selezionato...")
-            response = context.execute(self.ingestion_layer.qa_chain, query, language, toon_format=toon_format)
+            response = context.execute(self.ingestion_layer.retriever, query, language, toon_format=toon_format)
             ai_response = response.get("ai_response", "")
 
             self.chat_repository.add_message(self.chat_id, {"type": "system", "mex": ai_response})

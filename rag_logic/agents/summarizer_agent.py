@@ -1,4 +1,8 @@
 import logging
+
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
 from rag_logic.llm.LLM import LLM
 
 # Configura logger di base
@@ -13,14 +17,26 @@ def summary_agent(conversation_history: list, toon_format=False, language_hint="
     logger.info("Lunghezza conversazione: %d messaggi", len(conversation_history))
 
     # Converte la conversazione in testo
-    conv_text = "\n".join(
-        f"{type(msg).__name__}: {msg.content}" if hasattr(msg, "content") else str(msg)
-        for msg in conversation_history
-    )
+    formatted_lines = []
+    for msg in conversation_history:
+        if hasattr(msg, "content"):
+            role = "User" if msg.type == "human" else "AI"
+            formatted_lines.append(f"{role}: {msg.content}")
+        elif isinstance(msg, dict):
+            role = msg.get("role", "Unknown")
+            content = msg.get("content", "")
+            formatted_lines.append(f"{role}: {content}")
+        else:
+            formatted_lines.append(str(msg))
+
+    conv_text = "\n".join(formatted_lines)
+    if not conv_text.strip():
+        logger.warning("Cronologia vuota. Nessun sommario generato.")
+        return ""
+
     logger.info("Conversazione convertita in testo. Lunghezza caratteri: %d", len(conv_text))
 
-    # Prepara prompt per LLM
-    prompt_summary = f"""
+    template = """
         You are a chat summarization agent. 
         Your task is to analyze the entire conversation history between the user and the assistant 
         and produce a clear, concise summary capturing the essential information.\n\n
@@ -34,17 +50,29 @@ def summary_agent(conversation_history: list, toon_format=False, language_hint="
 
         Your output should be a short paragraph (5–7 lines) that provides enough context
         for another model to understand what the conversation was about and continue it smoothly.\n\n
+        
+        conversation history to summarize:
+        {conversation_text}
     """
-    logger.info("Prompt preparato per il modello. Lunghezza caratteri: %d", len(prompt_summary))
 
-    messages = [
-        {"role": "system", "content": prompt_summary},
-        {"role": "user", "content": conv_text}
-    ]
+    prompt = ChatPromptTemplate.from_template(template)
 
-    logger.info("Invio messaggi al modello LLM (toon_format=%s)...", toon_format)
-    summary = LLM().invoke(messages, config=None, toon_format=toon_format)
-    logger.info("Sommario generato correttamente. Lunghezza caratteri: %d %s", len(summary), type(summary))
+    chain = (
+            prompt
+            | LLM().bind(temperature=0.0)
+            | StrOutputParser()
+    )
 
-    logger.debug("Sommario:\n%s", summary)
-    return summary
+    try:
+        logger.info("Invio messaggi al modello LLM...", )
+        summary = chain.invoke({
+            "input": conv_text,
+            "language": language_hint})
+        logger.debug("Sommario:\n%s", summary)
+        logger.info("Sommario generato correttamente. Lunghezza caratteri: %d %s", len(summary), type(summary))
+        return summary.strip()
+    except Exception as e:
+        logger.error(f"Errore Summary: {e}")
+        return ""
+
+

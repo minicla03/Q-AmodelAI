@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib
 from abc import abstractmethod, ABC
-from langchain.tools import BaseTool
 
 
 class Context:
@@ -19,7 +18,7 @@ class Context:
         self._strategy = strategy
 
     def execute(self, *args, **kwargs) -> dict:
-        return self._strategy.execute(*args, **kwargs)
+        return self._strategy.execute(**kwargs)
 
 
 class ContextFactory:
@@ -46,6 +45,24 @@ class ContextFactory:
 
 class IToolStrategy(ABC):
 
+    def _retrieve_documents(self, retriever, user_query, max_sources=3, similarity_threshold=0.75):
+
+        vectorstore = retriever.vectorstore
+
+        # Retrieval
+        retrieved_docs_with_scores = vectorstore.similarity_search_with_score(user_query, k=10)
+
+        # Filtering
+        filtered_docs = []
+        for doc, score in retrieved_docs_with_scores:
+            if score >= similarity_threshold:
+                filtered_docs.append(doc)
+
+        return filtered_docs[:max_sources]
+
+    def format_docs(self, docs):
+        return "\n\n".join(doc.page_content for doc in docs)
+
     @abstractmethod
-    def execute(self, qa_chain, query: dict, language: str = "italian", toon_format: bool = False) -> dict:
+    def execute(self, retriever, query: dict, language: str = "italian", toon_format: bool = False) -> dict:
         pass

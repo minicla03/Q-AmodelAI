@@ -48,8 +48,8 @@ class IngestionFlow(object):
 
         self.retriever_vs = RetrievalBuilder.build(self.vectorstore)
         self.splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200, separators=["\n\n", "\n", ". ", " ", ""])
-        self.llm = LLM() #ChatOllama(model="llama3:latest", temperature=0.1, top_p=0.95, top_k=40)
-        self.qa_chain = RetrievalQA.from_chain_type(llm=self.llm, retriever=self.retriever_vs, return_source_documents=True)
+        #self.llm = LLM() #ChatOllama(model="llama3:latest", temperature=0.1, top_p=0.95, top_k=40)
+        #self.qa_chain = RetrievalQA.from_chain_type(llm=self.llm, retriever=self.retriever_vs, return_source_documents=True)
         #self.qa_chain = create_retrieval_chain(self.retriever_vs, self.llm)
 
         self.strategies = {
@@ -79,9 +79,13 @@ class IngestionFlow(object):
         )
 
         self.retriever_vs = RetrievalBuilder.build(self.vectorstore)
-        self.qa_chain.retriever = self.retriever_vs
+        #self.qa_chain.retriever = self.retriever_vs
         logger.info("Vectorstore ricaricato con successo.")
         return True
+
+    @property
+    def retriever(self):
+        return self.retriever_vs
 
     def add_document_to_vectorstore(self, file_path: str):
         """
@@ -107,7 +111,7 @@ class IngestionFlow(object):
 
         documents = strategy.load(file_path)
 
-        chunks = []
+        final_chunks = []
 
         for doc_idx, doc in enumerate(documents):
             doc.metadata.update(
@@ -137,9 +141,9 @@ class IngestionFlow(object):
                         else "no_overlap",
                     }
                 )
-                chunks.append(chunk)
+                final_chunks.append(chunk)
 
-        if not chunks:
+        if not final_chunks:
             logger.warning(f"Nessun chunk generato da '{file_path}'.")
             return
 
@@ -189,21 +193,26 @@ class IngestionFlow(object):
         except Exception as e:
             logger.exception(f"Errore cancellazione: {e}")
 
+
 class RetrievalBuilder:
     @staticmethod
-    def build(vectorstore):
+    def build(vectorstore, top_k=20, rerank_top_n=5):
+
         base_retriever = vectorstore.as_retriever(
             search_type="similarity",
-            search_kwargs={"k": 20},
+            search_kwargs={"k": top_k},
         )
 
-        # cross-encoder
-        compressor = CohereRerank(
-            model="rerank-multilingual-v3.0",
-            top_n=5,
-        )
+        try:
+            compressor = CohereRerank(
+                model="rerank-multilingual-v3.0",
+                top_n=rerank_top_n,
+            )
 
-        return ContextualCompressionRetriever(
-            base_retriever=base_retriever,
-            base_compressor=compressor,
-        )
+            return ContextualCompressionRetriever(
+                base_retriever=base_retriever,
+                base_compressor=compressor,
+            )
+        except Exception as e:
+            logger.warning(f"Cohere Rerank non disponibile (manca API Key?). Fallback su base retriever. Errore: {e}")
+            return base_retriever

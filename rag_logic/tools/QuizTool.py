@@ -1,7 +1,11 @@
 import json
 from abc import ABC
 
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+
 from persistence.model.Quiz import Quiz
+from rag_logic.llm.LLM import LLM
 from rag_logic.tools.QATool import QATool
 
 
@@ -10,17 +14,16 @@ class QuizTool(QATool, ABC):
     def __init__(self):
         super().__init__()
 
-    def execute(self, qa_chain, query, language_hint: str = "italian", toon_format: bool = False, n_questions=5,
+    def execute(self, retriever, query, language_hint: str = "italian", toon_format: bool = False, n_questions=5,
                 difficulty="medium"):
 
-        filtered_docs = self._retrieve_documents(qa_chain, query)
+        filtered_docs = self._retrieve_documents(retriever, query)
 
         if not filtered_docs:
             return {"type": "QUIZ", "result": [], "ai_response": "Nessun dato"}
 
-        context_text = "\n\n".join([d.page_content for d in filtered_docs])
 
-        prompt = f"""
+        system_prompt = f"""
         You are an AI assistant that generates multiple-choice quiz questions from a given text.
 
         Requirements:
@@ -34,21 +37,34 @@ class QuizTool(QATool, ABC):
         - Respond ONLY in valid JSON format as a list of objects.
         - answer_list must include 3-4 options: one correct answer and 2-3 plausible distractors.
         - Avoid obviously wrong answers.
-
-        Text to process:
-        {context_text}
         """
 
-        input_to_chain = {"input_documents": filtered_docs, "question": prompt}
+        user_prompt = """
+           Context:
+           {filtered_docs}
+    
+           User question:
+           {query}
+        """
 
-        response = qa_chain.combine_documents_chain.invoke(
-            input=input_to_chain,
-            config=None,
-            toon_format=toon_format
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            ("human", user_prompt),
+        ])
+
+        chain = (
+                {
+                    "context": retriever | self.format_docs(filtered_docs),
+                    "question": RunnablePassthrough(),
+                    "language": RunnablePassthrough(),
+                }
+                | prompt
+                | LLM()
         )
 
         try:
-            json_str = response["output_text"]
+            json_result = chain.invoke({"question": query, "language": language_hint})
+            json_str = json_result["output_text"]
 
             if "```json" in json_str:
                 json_str = json_str.split("```json")[1].split("```")[0].strip()

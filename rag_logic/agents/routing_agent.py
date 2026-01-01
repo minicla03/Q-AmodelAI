@@ -1,44 +1,18 @@
 import logging
 import re
 
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
 from rag_logic.llm.LLM import LLM
 
 logger = logging.getLogger(__name__)
 
 def router_agent(user_query, toon_format, language_hint="italian"):
-    """
-    Route the user's query to the appropriate RAG subsystem (QA, Flashcard, or Quiz).
-
-    This function uses an LLM (via LLM) to analyze the intent of the user's request
-    and decide which internal tool should handle it.
-
-    Parameters
-    ----------
-    user_query : str
-        The user's input or question.
-    language_hint : str, optional
-        The expected language of the user query (default is "italian").
-        This helps the model understand linguistic context and phrasing.
-
-    Returns
-    -------
-    str
-        The name of the function to execute.
-        Possible values:
-        - "QA_TOOL" → for explanatory or informational queries.
-        - "FLASHCARD_TOOL" → for flashcard generation requests.
-        - "QUIZ_TOOL" → for quiz or study-question generation requests.
-
-    Notes
-    -----
-    - The model is instructed to output only one of the three possible tool names.
-    - The output is normalized to handle small variations (e.g., extra spaces or text).
-    - Uses a low temperature to ensure deterministic classification.
-    """
 
     logger.info("Avvio router_agent per query: %s", user_query)
 
-    prompt_routing = f"""
+    template = """
         You are an intelligent task router for a Retrieval-Augmented Generation (RAG) system.
         Your job is to analyze the user's request and decide which function should be executed.
         
@@ -65,19 +39,16 @@ def router_agent(user_query, toon_format, language_hint="italian"):
         Respond ONLY with one of: QA_TOOL, FLASHCARD_TOOL, QUIZ_TOOL. No extra text, punctuation, or explanation.
     """
 
-    messages = [
-        {"role": "system", "content": prompt_routing},
-        {"role": "user", "content": user_query}
-    ]
+    prompt = ChatPromptTemplate.from_template(template)
+
+    chain = (
+            prompt
+            | LLM().bind(temperature=0.0)
+            | StrOutputParser()
+    )
 
     try:
-        response = LLM().invoke(
-            input=messages,
-            config=None,
-            toon_format=toon_format
-        )
-
-        #(model="llama3:latest", temperature=0.1, top_p=0.95, top_k=40)
+        response = chain.invoke({"input": user_query, "language": language_hint})
         logger.info("Invio messaggi al modello LLM...")
 
         text = response.strip().upper() #.content

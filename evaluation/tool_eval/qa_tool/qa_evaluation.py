@@ -132,7 +132,7 @@ def evaluate_qa_tool(dataset, qa_chain):
             language_hint = detect_language_from_query(test_case_data["query"])
 
             output = qa_tool.execute(
-                qa_chain=qa_chain,
+                retriever=qa_chain,
                 query=processed_query,
                 language_hint=language_hint,
                 toon_format=config["toon_format"]
