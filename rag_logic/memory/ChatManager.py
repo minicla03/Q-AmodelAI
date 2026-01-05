@@ -1,11 +1,14 @@
 import logging
-import os
-import shutil
 import traceback
 
 from persistence.long_term_memory.mongo.MongoDBMS import MongoConnectionManager
 from persistence.long_term_memory.mongo.NotebookRepository import MongoNotebookRepository
-from rag_logic.ingestion.ingestion import IngestionFlow
+from persistence.long_term_memory.mongo.FlashRepository import MongoFlashRepository
+from persistence.long_term_memory.mongo.QuizRepository import MongoQuizRepository
+
+from rag_logic.memory.DocumentManager import DocumentManager
+from rag_logic.memory.FlashcardManger import FlashcardManager
+from rag_logic.memory.QuizManager import QuizManager
 from rag_logic.utils import  detect_language_from_query
 
 from rag_logic.agents.routing_agent import router_agent
@@ -36,9 +39,6 @@ class ChatManager:
             user_id: str,
             notebook_id: str,
             chat_id: str,
-            notebook_repo: IRepos.INotebookRepository,
-            chat_repo: IRepos.IChatRepository,
-            ingestion_flow,
             document_path: str = "docs"
     ):
 
@@ -46,50 +46,70 @@ class ChatManager:
         self.notebook_id = notebook_id
         self.chat_id = chat_id
         self.document_path = document_path
+        mongo_conn = MongoConnectionManager.instance().db
 
         # Iniezione delle dipendenze
-        self.notebook_repository = notebook_repo
-        self.chat_repository = chat_repo
-        self.ingestion_layer = ingestion_flow
+        notebook_repository: IRepos.INotebookRepository = MongoNotebookRepository(mongo_conn)
+        self.chat_repository: IRepos.IChatRepository = ChatRepository(RedisConnectionManager.instance().client)
+        flashcard_repository: IRepos.IFlashcardRepository = MongoFlashRepository(mongo_conn)
+        quiz_repository: IRepos.IQuizRepository = MongoQuizRepository(mongo_conn)
+
+        self.doc_manager = DocumentManager(notebook_repository, notebook_id, chat_id, document_path)
+        self.flashcard_manager = FlashcardManager(flashcard_repository, notebook_id, user_id)
+        self.quiz_manager = QuizManager(quiz_repository, notebook_id, user_id)
+
+        self.notebook_repository = notebook_repository
 
         self.last_summary = ""
         self.ready = True
 
         try:
             self.last_summary = self.notebook_repository.get_last_summary(self.chat_id) or ""
-            logger.info(
-                f"ChatManager inizializzato per user {self.user_id} (Summary preesistente: {bool(self.last_summary)})")
         except Exception as e:
-            logger.error(f"Errore recupero summary iniziale: {e}")
+            logger.error(f"Errore init summary: {e}")
 
     def _restart(self):
-        """
-        Restores an existing chat session from the repository.
-        """
-        self.ingestion_layer = IngestionFlow(self.notebook_id)
-        self.ingestion_layer.reload_vectorstore()
+        self.doc_manager.reload_ingestion()
         self.ready = True
+
+    def close(self):
+
+        if not self.ready:
+            logger.warning("ChatManager già chiuso o non inizializzato.")
+            return
+
+
+        logger.info("Avvio procedura di chiusura sessione...")
+
+        try:
+            fc_saved = self.flashcard_manager.persist_buffer()
+            if fc_saved: logger.info(f"Salvate {fc_saved} flashcard.")
+
+            quiz_saved = self.quiz_manager.persist_buffer()
+            if quiz_saved: logger.info(f"Salvate {quiz_saved} quiz.")
+
+            if self.last_summary:
+                self.notebook_repository.update_chat_metadata(
+                    self.notebook_id, self.chat_id, summary=self.last_summary
+                )
+
+            if self.chat_repository:
+                self.chat_repository.reset_chat(self.chat_id)
+
+        except Exception as e:
+            logger.error(f"Errore in chiusura: {e}", exc_info=True)
+        finally:
+            self.ready = False
+            logger.info("Sessione chiusa.")
 
     def execute_rag_pipeline(self, user_query, default_language="italian", memory_ability=True, toon_format=False):
 
         logger.info("Avvio pipeline RAG per query utente: %s", user_query)
 
-        try:
-            self.chat_repository.add_message(self.chat_id, {"type": "human", "mex": user_query})
-            logger.info("User message added to chat history.")
-        except Exception as e:
-            logger.warning("Failed to save user message: %s", e)
-
-        logger.info("Messaggio utente aggiunto alla cronologia.")
-
         language = detect_language_from_query(user_query) or default_language
         logger.info("Lingua rilevata: %s", language)
 
-        if not self.ingestion_layer or not self.ingestion_layer.qa_chain:
-            logger.warning("Pipeline RAG non pronta")
-            return {"error": "Sistema QA non pronto", "ai_response": None}
-
-        tool_name = router_agent(user_query, toon_format, language)
+        tool_name = router_agent(user_query, language)
         logger.info(f"Tool selezionato dal router: {tool_name}")
 
         context = ContextFactory.create(tool_name)
@@ -114,100 +134,59 @@ class ChatManager:
 
         try:
             logger.info("Esecuzione catena RAG con il contesto selezionato...")
-            response = context.execute(self.ingestion_layer.retriever, query, language, toon_format=toon_format)
-            ai_response = response.get("ai_response", "")
+            response = context.execute(
+                self.doc_manager.retriever,
+                query,
+                language,
+                toon_format=toon_format
+            )
 
-            self.chat_repository.add_message(self.chat_id, {"type": "system", "mex": ai_response})
-            logger.info("AI response saved to chat history.")
+            self._update_memory(tool_name, user_query, response)
             logger.info("Esecuzione completata con successo.")
             return response
         except Exception as e:
-            tb_str = traceback.format_exc()
-            logger.error("Errore durante l'esecuzione della pipeline RAG: %s", str(e))
-            logger.debug("Traceback completo:\n%s", tb_str)
-            return {
-                "error": f"Errore interno: {str(e)}",
-                "traceback": tb_str,
-                "ai_response": None
-            }
+            logger.error(f"RAG Error: {e}", exc_info=True)
+            return {"error": str(e), "ai_response": None}
 
-    def add_document(self, file_path: str):
-        if not os.path.exists(file_path):
-            logger.error(f"File non trovato: {file_path}")
-            return
+    def _update_memory(self, tool_name, user_query, response):
 
-        try:
-            os.makedirs(self.document_path, exist_ok=True)
+        if tool_name == "QA_TOOL":
+            self.chat_repository.add_message(self.chat_id, {"type": "human", "mex": user_query})
+            logger.info("User message added to chat history.")
+            ai_text_response = response.get("ai_response", "Contenuto generato.")
+            self.chat_repository.add_message(self.chat_id, {"type": "ai", "mex": ai_text_response})
+            logger.info("AI response saved to chat history.")
+        elif tool_name == "FLASHCARD_TOOL":
+            flashcards = response.get("result", [])
+            if flashcards:
+                self.flashcard_manager.add_to_buffer(flashcards)
+                ai_text = f"Ho generato {len(flashcards)} flashcard (buffer)."
+        elif tool_name == "QUIZ_TOOL":
+            quiz = response.get("result")
+            if quiz:
+                self.quiz_manager.add_to_buffer(quiz)
+                ai_text = "Ho generato un nuovo quiz (buffer)."
 
-            file_name = os.path.basename(file_path)
-            dest_path = os.path.join(self.document_path, file_name)
+    # Docs
+    def add_document(self, path):
+        return self.doc_manager.add_document(path)
 
-            if os.path.abspath(file_path) != os.path.abspath(dest_path):
-                shutil.copy(file_path, dest_path)
-                logger.info(f"Documento copiato in: {dest_path}")
+    def delete_document(self, name):
+        return self.doc_manager.delete_document(name)
 
-            self.ingestion_layer.add_document_to_vectorstore(dest_path)
+    def list_documents(self):
+        return self.doc_manager.list_documents()
 
-            self.notebook_repository.update_chat_metadata(self.notebook_id, self.chat_id, docs=[dest_path])
-            logger.info(f"Documento '{file_name}' aggiunto e indicizzato con successo.")
+    # Flashcards
+    def get_stored_flashcards(self):
+        return self.flashcard_manager.get_all()
 
-        except Exception as e:
-            logger.error(f"Errore durante l'aggiunta del documento '{file_path}': {e}", exc_info=True)
+    def delete_stored_flashcard(self, fid):
+        return self.flashcard_manager.delete(fid)
 
-    def delete_document(self, file_name: str) -> bool:
-    
-        file_path = os.path.join(self.document_path, file_name)
+    # Quiz
+    def get_stored_quizzes(self):
+        return self.quiz_manager.get_all()
 
-        logger.info(f"Richiesta eliminazione documento: {file_name}")
-
-        try:
-            self.ingestion_layer.delete_document_from_vectorstore(file_name)
-
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                logger.info(f"File fisico '{file_path}' rimosso.")
-            else:
-                logger.warning(f"File fisico '{file_path}' non trovato, impossibile rimuovere.")
-
-            #self.notebook_repository.remove_doc_from_metadata() #Todo()
-
-            return True
-        except Exception as e:
-            logger.error(f"Errore durante l'eliminazione del documento '{file_name}': {e}", exc_info=True)
-            return False
-
-    def list_documents(self) -> list:
-        """
-        Returns a list of documents associated with the notebook.
-        """
-        try:
-            docs = self.notebook_repository.get_list_docs(self.notebook_id)
-            return docs if docs else []
-        except Exception as e:
-            logger.error(f"Errore nel recupero lista documenti: {e}")
-            return []
-
-    def is_ready(self) -> bool:
-        return self.ready and self.ingestion_layer is not None
-
-    def close(self):
-
-        if not self.ready:
-            logger.warning("ChatManager già chiuso o non inizializzato.")
-            return
-
-        try:
-            if self.last_summary:
-                self.notebook_repository.update_chat_metadata(self.notebook_id, self.chat_id, summary=self.last_summary)
-                logger.info(f"Ultimo summary salvato per chat {self.chat_id}")
-
-            if self.chat_repository:
-                self.chat_repository.reset_chat(self.chat_id)
-                logger.info(f"Cronologia Redis pulita per chat {self.chat_id}")
-
-        except Exception as e:
-            logger.error(f"Errore durante la chiusura del ChatManager: {e}", exc_info=True)
-        finally:
-            self.ready = False
-            self.ingestion_layer = None
-            logger.info(f"ChatManager chiuso correttamente.")
+    def delete_stored_quiz(self, qid):
+        return self.quiz_manager.delete(qid)
