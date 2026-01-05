@@ -16,7 +16,7 @@ class NotebookManager:
         self.notebook_repo: INotebookRepository = MongoNotebookRepository(MongoConnectionManager.instance().db)
         self.chat_repository: IChatRepository = ChatRepository(RedisConnectionManager.instance().client)
 
-    def create_notebook(self, notebook_name: str, id_user: str) -> Notebook:
+    def create_notebook(self, notebook_name: str, id_user: str) -> tuple[Notebook, str]:
         """Crea un nuovo notebook e lo salva in memoria e su MongoDB"""
         NotebookManager.counter += 1
         notebook_name = notebook_name or f"Notebook{NotebookManager.counter}"
@@ -29,12 +29,10 @@ class NotebookManager:
             self.notebook_dict[notebook.id_notebook] = notebook
 
             chat_id = self.chat_repository.create_chat(notebook.id_notebook)
-            #notebook.chat_manager = ChatManager(notebook.id_user, notebook.id_notebook, chat_id)
-            notebook.id_notebook = chat_id
         except Exception as e:
             raise RuntimeError(f"Errore creando notebook: {e}")
 
-        return notebook
+        return notebook, chat_id
 
     def delete_notebook(self, notebook_id: str):
         """Elimina un notebook da memoria e MongoDB"""

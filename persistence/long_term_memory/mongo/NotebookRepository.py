@@ -29,7 +29,7 @@ class MongoNotebookRepository(IRepos.INotebookRepository):
             self.db[MongoNotebookRepository.CHATS_METADATA_COLLECTION].update_one(
                 {"notebook_id": ObjectId(notebook_id)},
                 {"$set": {
-                    "last_chat_id": ObjectId(chat_id),
+                    "chat_id": chat_id,
                     "last_summary": summary,
                     "updated_at": datetime.datetime.now(),
                     "docs": docs
