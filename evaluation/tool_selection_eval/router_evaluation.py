@@ -166,7 +166,7 @@ def evaluate_router(test_dataset):
 
         for toon_format in toon_format_options:
 
-            predicted = router_agent(query, toon_format, language_hint,)
+            predicted = router_agent(query, language_hint,)
 
             test_case = LLMTestCase(
                 input=query,

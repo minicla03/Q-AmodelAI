@@ -33,7 +33,7 @@ class LLM(Runnable):
 
     def __init__(
             self,
-            model: str = "llama3:latest",
+            model: str = "gpt-oss:120b-cloud",
             temperature: float = 0.1,
             top_p: float = 0.95,
             top_k: int = 40
@@ -126,7 +126,21 @@ class LLM(Runnable):
             return [{"role": "user", "content": input.text}]
 
         elif isinstance(input, ChatPromptValue):
-            return [{"role": m.role, "content": m.content} for m in input.messages]
+            messages = []
+            for m in input.messages:
+                if m.type == 'human':
+                    role = 'user'
+                elif m.type == 'ai':
+                    role = 'assistant'
+                elif m.type == 'system':
+                    role = 'system'
+                elif m.type == 'chat':
+                    role = getattr(m, 'role', 'user')
+                else:
+                    role = 'user'
+
+                messages.append({"role": role, "content": m.content})
+            return messages
 
         elif isinstance(input, dict):
             if "messages" in input:
@@ -134,7 +148,8 @@ class LLM(Runnable):
             elif "text" in input:
                 return [{"role": "user", "content": input["text"]}]
             else:
-                raise ValueError(f"Invalid dict input keys: {input.keys()}")
+                content = input.get("input") or str(input)
+                return [{"role": "user", "content": content}]
 
         else:
             return [{"role": "user", "content": str(input)}]

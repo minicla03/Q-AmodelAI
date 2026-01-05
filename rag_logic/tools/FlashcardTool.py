@@ -1,6 +1,7 @@
 from abc import ABC
 
 from langchain_classic.chains.llm import LLMChain
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 
@@ -17,6 +18,8 @@ class FlashcardTool(QATool, ABC):
         super().__init__()
 
     def execute(self, retriever, query, language_hint="italian", toon_format: bool = False, n_flashcard=10, difficulty = "medium"):
+
+        user_query_str = query.get("user_query", "")
 
         filtered_docs = self._retrieve_documents(retriever, query)
 
@@ -59,37 +62,41 @@ class FlashcardTool(QATool, ABC):
         ])
 
         flash_chain = (
-            {
-                "context": retriever | self.format_docs(filtered_docs),
-                "query": RunnablePassthrough(),
-                "language": RunnablePassthrough(),
-            }
-            | prompt
+            prompt
             | LLM()
+            | StrOutputParser()
         )
 
-        # Invoca il chain
         try:
-            json_result = flash_chain.invoke({"question": query, "language": language_hint})
+            json_result = flash_chain.invoke({
+                "context":  self.format_docs(filtered_docs),
+                "question": user_query_str,
+                 "language": language_hint
+            })
 
-            json_str = json_result["output_text"]
-            json_str = json_str.replace("```json", "").replace("```", "").strip()
+            json_str = json_result.replace("```json", "").replace("```", "").strip()
 
             flashcards_data = json.loads(json_str)
-        except Exception as e:
-            print(f"Errore parsing JSON: {e}")
-            print(f"Risposta grezza: {json_result.get('output_text', 'KeyError')}")
-            raise ValueError("Output non in formato JSON valido")
 
-        flashcard = [Flashcard(answer=ft["answer"], question=ft["question"]) for ft in flashcards_data]
+            flashcard_objects = [Flashcard(answer=ft["answer"], question=ft["question"]) for ft in flashcards_data]
 
-        return {
-            "type": "FLASHCARD",
-            "result": flashcard,
-            "docs_source": filtered_docs,
-            "metadata": {
-                "language": language_hint,
-                "n_flashcards": n_flashcard,
-                "difficulty": difficulty
+            return {
+                "type": "FLASHCARD",
+                "result": flashcard_objects,
+                "docs_source": filtered_docs,
+                "metadata": {
+                    "language": language_hint,
+                    "n_flashcards": n_flashcard,
+                    "difficulty": difficulty
+                }
             }
-        }
+
+        except Exception as e:
+
+            print(f"Errore generazione Flashcards: {e}")
+            return {
+                "type": "FLASHCARD",
+                "result": [],
+                "ai_response": f"Errore durante la generazione: {str(e)}"
+            }
+

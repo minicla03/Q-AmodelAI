@@ -8,13 +8,15 @@ from rag_logic.llm.LLM import LLM
 
 logger = logging.getLogger(__name__)
 
-def router_agent(user_query, toon_format, language_hint="italian"):
+def router_agent(user_query, language_hint="italian"):
 
     logger.info("Avvio router_agent per query: %s", user_query)
 
     template = """
         You are an intelligent task router for a Retrieval-Augmented Generation (RAG) system.
         Your job is to analyze the user's request and decide which function should be executed.
+        
+        User Query: "{input}"
         
         Available functions:
         1. QA_TOOL → Answers a question based on the context retrieved from documents.
@@ -48,10 +50,10 @@ def router_agent(user_query, toon_format, language_hint="italian"):
     )
 
     try:
-        response = chain.invoke({"input": user_query, "language": language_hint})
+        response = chain.invoke({"input": user_query, "language_hint": language_hint})
         logger.info("Invio messaggi al modello LLM...")
 
-        text = response.strip().upper() #.content
+        text = response.strip().upper()
         logger.info("Risposta grezza del modello: %s", text)
 
         match = re.search(r"(QA_TOOL|FLASHCARD_TOOL|QUIZ_TOOL)", text)

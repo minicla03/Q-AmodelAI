@@ -1,6 +1,5 @@
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
 
 from rag_logic.llm.LLM import LLM
 from rag_logic.tools.ITool import IToolStrategy
@@ -13,8 +12,8 @@ class QATool(IToolStrategy):
 
     def execute(self, retriever, query: dict, language="italian", toon_format: bool = False):
 
-        user_query = query["user_query"]
-        summary = query["summary"]
+        user_query = query.get("user_query")
+        summary = query.get("summary")
 
         filtered_docs = self._retrieve_documents(retriever, user_query)
 
@@ -37,12 +36,12 @@ class QATool(IToolStrategy):
         """
 
         user_prompt = """
-                Contesto:
-                {context}
-                
-                Domanda Utente: 
-                {user_query}
-                """
+            Contesto:
+            {context}
+            
+            Domanda Utente: 
+            {user_query}
+        """
 
         if summary:
             user_prompt += """
@@ -56,26 +55,19 @@ class QATool(IToolStrategy):
         ])
 
         qa_chain = (
-                {
-                    "context": retriever | self.format_docs(filtered_docs),
-                    "question": RunnablePassthrough(),
-                    "summary": RunnablePassthrough(),
-                    "language": RunnablePassthrough()
-                }
-                | prompt
+                prompt
                 | LLM()
                 | StrOutputParser()
         )
 
         response = qa_chain.invoke({
-            "question": user_query,
-            "summary": summary,
-            "language": language
+            "context": self.format_docs(filtered_docs),
+            "user_query": user_query,
         })
 
         return  {
             "type": "QA",
-            "ai_response": response["output_text"] ,
+            "ai_response": response ,
             "docs_source": filtered_docs,
             "metadata": {"language": language}
         }

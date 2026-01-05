@@ -104,7 +104,7 @@ def generate_html_results(results: list, output_file="results.html"):
 
     print(f"File HTML generato con successo: {output_file}")
 
-def evaluate_qa_tool(dataset, qa_chain):
+def evaluate_qa_tool(dataset, retrieval):
 
     deepeval_results = []
     custom_metric_results = []
@@ -132,9 +132,8 @@ def evaluate_qa_tool(dataset, qa_chain):
             language_hint = detect_language_from_query(test_case_data["query"])
 
             output = qa_tool.execute(
-                retriever=qa_chain,
+                retriever=retrieval,
                 query=processed_query,
-                language_hint=language_hint,
                 toon_format=config["toon_format"]
             )
 
@@ -168,21 +167,16 @@ def evaluate_qa_tool(dataset, qa_chain):
 
 def start_qa_evaluation():
     dataset = TEST_CASES
-    qa_chain = None
 
     try:
         ingestor = IngestionFlow("691642bdbaec0c4aae000526")
         ingestor.add_documents_from_folder(data_path) if not ingestor.reload_vectorstore() else None
-        qa_chain = ingestor.qa_chain
+        retrieval = ingestor.retriever_vs
     except (FileNotFoundError, ValueError) as e:
         logger.error(e, exc_info=True)
         exit(1)
-    except Exception as e:
-        logger.error("qa_chain non pronta.", exc_info=True)
-        exit(1)
-
 
     logger.info("Inizio valutazione su test set...\n")
 
-    results = evaluate_qa_tool(dataset, qa_chain)
+    results = evaluate_qa_tool(dataset, retrieval)
     generate_html_results(results, "valutazione_qa.html")
