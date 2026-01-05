@@ -4,14 +4,13 @@ import logging
 import os
 
 from langchain_classic.retrievers import ContextualCompressionRetriever
-from langchain_classic.retrievers.document_compressors import CohereRerank
+from langchain_cohere import CohereRerank
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_classic.chains import RetrievalQA
 
 from rag_logic.ingestion.DocumentLoaderStrategy import *
-from rag_logic.llm.LLM import LLM
 
 logging.basicConfig(
     level=logging.INFO,
@@ -64,9 +63,6 @@ class IngestionFlow(object):
         logger.info(f"IngestionFlow initialized for notebook '{notebook_id}'.")
 
     def reload_vectorstore(self):
-        """
-
-        """
         if not os.path.exists(self.persist_dir):
             raise FileNotFoundError(f"Nessun database Chroma trovato in '{self.persist_dir}'.")
 
