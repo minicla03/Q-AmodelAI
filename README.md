@@ -22,13 +22,13 @@ Questa applicazione consente di:
 - Caricare PDF personali tramite un'interfaccia GUI;
 - Eseguire domande sui contenuti caricati, con supporto multilingua (IT, EN, ES, FR, DE);
 - Visualizzare fonti e documenti usati nella risposta;
-- ⚠️ In sviluppo - Possibilità di creare FlashCard e QUiz
+- ⚠️ In sviluppo - Possibilità di creare FlashCard e Quiz
 ---
 
 ## ⚙️ Requisiti
 
 - Python 3.10+
-- [LLM](https://ollama.com/) installato e attivo con modello `llama3:latest`
+- [Ollama](https://ollama.com/) installato e attivo con modello `llama3:latest`
 
 ---
 
