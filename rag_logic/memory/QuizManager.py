@@ -1,4 +1,7 @@
+from typing import List
+
 from persistence.IxRepository import IRepos
+from persistence.model.Quiz import Quiz
 from rag_logic.memory.ChatManager import logger
 
 
@@ -7,11 +10,28 @@ class QuizManager:
         self.repository = repository
         self.notebook_id = notebook_id
         self.user_id = user_id
-        self._buffer = []
+        self._buffer: List[Quiz] = []
 
-    def add_to_buffer(self, quiz):
-        if quiz:
-            self._buffer.append(quiz)
+    def add_to_buffer(self, quiz_data):
+        clean_objects = []
+        for item in quiz_data:
+            if isinstance(item, Quiz):
+                item.notebook_id = self.notebook_id
+                item.user_id = self.user_id
+                clean_objects.append(item)
+            elif isinstance(item, dict):
+                clean_objects.append(
+                    Quiz(
+                        notebook_id=self.notebook_id,
+                        user_id=self.user_id,
+                        question=item.get("question"),
+                        answer_list=item.get("answer_list"),
+                        correct_answer=item.get("correct_answer"),
+                        difficulty=item.get("difficulty", "medium")
+                    )
+                )
+
+        self._buffer.extend(clean_objects)
 
     def persist_buffer(self):
         if not self._buffer:
@@ -20,15 +40,13 @@ class QuizManager:
         count = 0
         try:
             for q in self._buffer:
-                data = q.to_dict() if hasattr(q, 'to_dict') else q
-                data['notebook_id'] = self.notebook_id
-                data['user_id'] = self.user_id
+                data = q.to_dict()
                 self.repository.create_quiz(data)
                 count += 1
             self._buffer.clear()
             return count
         except Exception as e:
-            logger.error(f"Errore salvataggio quiz: {e}")
+            logger.error(f"Errore salvataggio quiz: {e}", exc_info=True)
             return 0
 
     def get_all(self) -> list:
@@ -39,7 +57,7 @@ class QuizManager:
 
         ram_quizzes = []
         for idx, quiz in enumerate(self._buffer):
-            data = quiz.to_dict() if hasattr(quiz, 'to_dict') else quiz.copy()
+            data = quiz.to_dict()
             data['_id'] = f"ram_{idx}"
             data['is_unsaved'] = True
             ram_quizzes.append(data)

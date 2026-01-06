@@ -1,19 +1,15 @@
 from abc import ABC
 
-from langchain_classic.chains.llm import LLMChain
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
 
 from rag_logic.llm.LLM import LLM
 from rag_logic.tools.QATool import QATool
-from persistence.model.Flashcard import Flashcard
 import json
 
-from rag_logic.utils import json_to_toon, toon_to_json
 
 
-class FlashcardTool(QATool, ABC):
+class FlashcardTool(IToolStrategy):
     def __init__(self):
         super().__init__()
 
@@ -21,7 +17,7 @@ class FlashcardTool(QATool, ABC):
 
         user_query_str = query.get("user_query", "")
 
-        filtered_docs = self._retrieve_documents(retriever, query)
+        filtered_docs = self._retrieve_documents(retriever, user_query_str)
 
         if not filtered_docs:
             return {"type": "FLASHCARD",
@@ -41,7 +37,7 @@ class FlashcardTool(QATool, ABC):
             - Language: {language_hint}
             - Respond ONLY in valid JSON format as a list of objects:
               [
-                {{"question": "...", "answer": "..."}},
+                {{{{"question": "...", "answer": "..."}}}},
                 ...
               ]
               
@@ -69,8 +65,8 @@ class FlashcardTool(QATool, ABC):
 
         try:
             json_result = flash_chain.invoke({
-                "context":  self.format_docs(filtered_docs),
-                "question": user_query_str,
+                "filtered_docs":  self.format_docs(filtered_docs),
+                "query": user_query_str,
                  "language": language_hint
             })
 
@@ -78,17 +74,16 @@ class FlashcardTool(QATool, ABC):
 
             flashcards_data = json.loads(json_str)
 
-            flashcard_objects = [Flashcard(answer=ft["answer"], question=ft["question"]) for ft in flashcards_data]
-
             return {
                 "type": "FLASHCARD",
-                "result": flashcard_objects,
+                "result": flashcards_data,
                 "docs_source": filtered_docs,
                 "metadata": {
                     "language": language_hint,
                     "n_flashcards": n_flashcard,
                     "difficulty": difficulty
-                }
+                },
+                "ai_response": f"Ho generato {len(flashcards_data)} flashcard. Digita /flashcards per vederle o salvarle."
             }
 
         except Exception as e:

@@ -1,5 +1,10 @@
 import logging
-import traceback
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 from persistence.long_term_memory.mongo.MongoDBMS import MongoConnectionManager
 from persistence.long_term_memory.mongo.NotebookRepository import MongoNotebookRepository
@@ -19,12 +24,6 @@ from rag_logic.tools.ITool import ContextFactory
 from persistence.IxRepository import IRepos
 from persistence.short_term_memory.redis.RedisDBMS import RedisConnectionManager
 from persistence.short_term_memory.redis.ChatRepository import ChatRepository
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-)
-logger = logging.getLogger(__name__)
 
 class ChatManager:
     """
@@ -160,7 +159,7 @@ class ChatManager:
             flashcards = response.get("result", [])
             if flashcards:
                 self.flashcard_manager.add_to_buffer(flashcards)
-                ai_text = f"Ho generato {len(flashcards)} flashcard (buffer)."
+                logger.info(f"Ho generato {len(flashcards)} flashcard (buffer).")
         elif tool_name == "QUIZ_TOOL":
             quiz = response.get("result")
             if quiz:

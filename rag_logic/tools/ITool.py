@@ -45,10 +45,8 @@ class ContextFactory:
 
 class IToolStrategy(ABC):
 
-    def _retrieve_documents(self, retriever, user_query, max_sources=6):
-
-        docs = retriever.invoke(user_query)
-        return docs[:max_sources]
+    def _retrieve_documents(self, retriever, user_query):
+        return retriever.invoke(user_query)
 
     def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)

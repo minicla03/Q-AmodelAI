@@ -1,17 +1,21 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
+
 
 @dataclass
 class Quiz:
-    id_notebook: str
+    notebook_id: str
+    user_id: str
     question: str
     answer_list: List[str]
     difficulty: str
     correct_answer: str
+    _id: Optional[str] = None
 
     def to_dict(self):
         return {
-            'id_notebook': self.id_notebook,
+            'notebook_id': self.notebook_id,
+            'user_id': self.user_id,
             'question': self.question,
             'answer_list': self.answer_list,
             'difficulty': self.difficulty,
@@ -21,11 +25,13 @@ class Quiz:
     @classmethod
     def from_dict(cls, data: dict) -> "Quiz":
         return cls(
-            id_notebook=data["id_notebook"],
-            question=data["question"],
-            answer_list=data["answer_list"],
-            difficulty=data["difficulty"],
-            correct_answer=data["correct_answer"]
+            notebook_id=data.get("notebook_id") or data.get("id_notebook"),
+            user_id=data.get("user_id"),
+            question=data.get("question"),
+            answer_list=data.get("answer_list"),
+            difficulty=data.get("difficulty"),
+            correct_answer=data.get("correct_answer"),
+            _id=str(data.get("_id")) if data.get("_id") else None
         )
 
 

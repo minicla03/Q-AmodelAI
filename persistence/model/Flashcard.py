@@ -1,14 +1,19 @@
 from dataclasses import dataclass
+from typing import Optional
+
 
 @dataclass
 class Flashcard:
-    id_notebook: str
+    notebook_id: str
+    user_id: str
     question: str
     answer: str
+    _id: Optional[str] = None
 
     def to_dict(self):
         return {
-            'id_notebook': self.id_notebook,
+            'notebook_id': self.notebook_id,
+            'user_id': self.user_id,
             'question': self.question,
             'answer': self.answer,
         }
@@ -16,7 +21,9 @@ class Flashcard:
     @classmethod
     def from_dict(cls, data: dict) -> "Flashcard":
         return cls(
-            id_notebook=data["id_notebook"],
-            question=data["question"],
-            answer=data["answer"],
+            notebook_id=data.get("notebook_id") or data.get("id_notebook"), # Fallback per sicurezza
+            user_id=data.get("user_id") or data.get("id_user"),
+            question=data.get("question"),
+            answer=data.get("answer"),
+            _id=str(data.get("_id")) if data.get("_id") else None
         )
