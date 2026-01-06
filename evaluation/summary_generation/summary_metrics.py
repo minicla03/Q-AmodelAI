@@ -1,4 +1,3 @@
-import os
 from deepeval.metrics import SummarizationMetric, HallucinationMetric, FaithfulnessMetric
 from deepeval.models import OllamaModel
 

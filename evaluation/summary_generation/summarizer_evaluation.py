@@ -1,123 +1,93 @@
+import sys
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '../../'))
+sys.path.append(project_root)
+
+from dotenv import load_dotenv
+
 import logging
-
-from deepeval.evaluate import evaluate
-from deepeval.test_case import LLMTestCase
-
-from rag_logic.agents.summarizer_agent import summary_agent
-from rag_logic.utils import detect_language_from_query
-
-from evaluation.summary_generation.summary_testset import  TEST_CASE
-from evaluation.summary_generation.summary_metrics import *
-
-logger = logging.getLogger(__name__)
-
 import json
 from pathlib import Path
 from html import escape
 
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.evaluate import evaluate
+from deepeval.test_case import LLMTestCase
 
-def generate_html_report(results, output_path="summarizer_report.html"):
-    """
-    Genera un report HTML dai risultati della valutazione dei sommari.
+from evaluation.summary_generation import summary_metrics
+from evaluation.summary_generation.html_report_gen import generate_html_report
+from rag_logic.agents.summarizer_agent import summary_agent
+from rag_logic.utils import detect_language_from_query
 
-    Args:
-        results: lista di dizionari restituiti da evaluate_summarizer
-        output_path: percorso file HTML da creare
-    """
-    html_content = """
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Summarizer Evaluation Report</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
-            th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
-            th { background-color: #f2f2f2; }
-            tr:nth-child(even) { background-color: #f9f9f9; }
-            pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; }
-        </style>
-    </head>
-    <body>
-        <h1>Summarizer Evaluation Report</h1>
-        <table>
-            <tr>
-                <th>Test Index</th>
-                <th>Predicted Summary</th>
-                <th>Expected Summary</th>
-                <th>Classic Metrics</th>
-                <th>DeepEval Metrics</th>
-            </tr>
-    """
+from summary_testset import TEST_CASE
 
-    for r in results:
-        html_content += f"""
-        <tr>
-            <td>{r['test_index']}</td>
-            <td><pre>{escape(r['predicted_summary'])}</pre></td>
-            <td><pre>{escape(r['expected_summary'])}</pre></td>
-            <td><pre>{escape(json.dumps(r['classic_metrics'], indent=2, ensure_ascii=False))}</pre></td>
-            <td><pre>{escape(json.dumps(r['deepeval'], indent=2, ensure_ascii=False))}</pre></td>
-        </tr>
-        """
+logger = logging.getLogger(__name__)
 
-    html_content += """
-        </table>
-    </body>
-    </html>
-    """
-
-    # Scrive il file HTML
-    Path(output_path).write_text(html_content, encoding="utf-8")
-    print(f"Report HTML generato: {output_path}")
 
 def evaluate_summarizer(test_dataset):
 
-    toon_format_options = [False]
     results = []
 
-    for idx, item in enumerate(test_dataset):
+    for idx, golden in enumerate(test_dataset.goldens):
 
-        conversation_history = item["conversation_history"]
-        expected_summary = item["expected_summary"]
+        conversation_history_list = json.loads(golden.input)
+        expected_summary = golden.expected_output
 
-        language_hint = detect_language_from_query(conversation_history[0]["content"])
+        language_hint = detect_language_from_query(conversation_history_list[0]["content"])
         logger.info(f"Language hint: {language_hint}")
-        item_result = {}
 
-        for toon_format in toon_format_options:
+        predicted_summary = summary_agent(conversation_history_list, language_hint)
 
-            predicted = summary_agent(conversation_history, False, language_hint)
+        logger.info("Avvio valutazione sul summarizer...")
 
-            conv_text = "\n".join(f"{msg['role']}: {msg['content']}" for msg in conversation_history)
+        context_data = [msg["content"] for msg in conversation_history_list]
 
-            ctx = [f"{msg['role']}: {msg['content']}" for msg in conversation_history]
+        classic_metric_result = summary_metrics.classic_metric(expected_summary, predicted_summary)
 
-            test_case = LLMTestCase(
-                input=conv_text,
-                actual_output=predicted,
-                expected_output=expected_summary,
-                context= ctx,
-                retrieval_context= ctx
-            )
+        test_case = LLMTestCase(
+            input=golden.input,
+            actual_output=predicted_summary,
+            expected_output=expected_summary,
+            context=context_data,
+            retrieval_context=context_data
+        )
 
-            logger.info("Avvio valutazione DeepEval sul summarizer...")
-            deepeval_result = evaluate(test_cases=[test_case], metrics=summary_metrics.get_list_deep_eval_metrics())
+        deepeval_result = evaluate(
+            test_cases=[test_case],
+            metrics=summary_metrics.get_list_deep_eval_metrics(),
+        )
 
-            classic_metric_result = summary_metrics.classic_metric(expected_summary, predicted)
-
-            results.append({
-                "test_index": idx,
-                "toon_format": toon_format,
-                "predicted_summary": predicted,
-                "expected_summary": expected_summary,
-                "deepeval": deepeval_result,
-                "classic_metrics": classic_metric_result
-            })
+        results.append({
+            "test_index": idx,
+            "predicted_summary": predicted_summary,
+            "expected_summary": expected_summary,
+            "deepeval": deepeval_result,
+            "classic_metrics": classic_metric_result
+        })
 
     return results
 
+def _create_golden(dataset):
+    goldens = []
+    for item in dataset:
+        goldens.append(
+            Golden(
+                input=json.dumps(item["conversation_history"], ensure_ascii=False),
+                expected_output = item["expected_summary"]
+            )
+        )
+    return goldens
+
 def start_evaluation_summarizer():
-    dataset = TEST_CASE
+    load_dotenv(dotenv_path="evaluation/.env.local", override=True)
+
+    tests = TEST_CASE
+    dataset= EvaluationDataset(goldens=_create_golden(tests))
+    # dataset.push(alias="MessageSummarizer Dataset")
     results = evaluate_summarizer(dataset)
-    generate_html_report(results, output_path="report.html")
+    generate_html_report(results, output_path="summarizer_report.html")
+
+if __name__ == "__main__":
+    start_evaluation_summarizer()

@@ -12,7 +12,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def summary_agent(conversation_history: list, toon_format=False, language_hint="italian"):
+def summary_agent(conversation_history: list, language_hint="italian"):
     logger.info("Avvio generazione sommario...")
     logger.info("Lunghezza conversazione: %d messaggi", len(conversation_history))
 
@@ -66,8 +66,8 @@ def summary_agent(conversation_history: list, toon_format=False, language_hint="
     try:
         logger.info("Invio messaggi al modello LLM...", )
         summary = chain.invoke({
-            "input": conv_text,
-            "language": language_hint})
+            "conversation_text": conv_text,
+            "language_hint": language_hint})
         logger.debug("Sommario:\n%s", summary)
         logger.info("Sommario generato correttamente. Lunghezza caratteri: %d %s", len(summary), type(summary))
         return summary.strip()
