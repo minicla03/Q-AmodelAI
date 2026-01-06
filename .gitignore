@@ -201,3 +201,6 @@ presentation/docs
 presentation/chroma_db
 .deepeval
 test/
+/rag_logic/test_docs_storage/
+/rag_logic/docs_storage/
+/presentation/
