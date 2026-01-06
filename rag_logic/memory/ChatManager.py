@@ -103,6 +103,11 @@ class ChatManager:
 
     def execute_rag_pipeline(self, user_query, default_language="italian", memory_ability=True, toon_format=False):
 
+        if not self.ready:
+            return {
+                "error": "Sessione chiusa",
+                "ai_response": "La sessione è terminata. Riavvia il notebook."}
+
         logger.info("Avvio pipeline RAG per query utente: %s", user_query)
 
         language = detect_language_from_query(user_query) or default_language
@@ -149,22 +154,31 @@ class ChatManager:
 
     def _update_memory(self, tool_name, user_query, response):
 
+        self.chat_repository.add_message(self.chat_id, {"type": "human", "mex": user_query})
+        logger.info("User message added to chat history.")
+
         if tool_name == "QA_TOOL":
-            self.chat_repository.add_message(self.chat_id, {"type": "human", "mex": user_query})
-            logger.info("User message added to chat history.")
             ai_text_response = response.get("ai_response", "Contenuto generato.")
             self.chat_repository.add_message(self.chat_id, {"type": "ai", "mex": ai_text_response})
-            logger.info("AI response saved to chat history.")
+            logger.info("AI QA response saved to chat history.")
+
         elif tool_name == "FLASHCARD_TOOL":
             flashcards = response.get("result", [])
             if flashcards:
                 self.flashcard_manager.add_to_buffer(flashcards)
                 logger.info(f"Ho generato {len(flashcards)} flashcard (buffer).")
+            ai_text = response.get("ai_response", "Flashcard generate.")
+            self.chat_repository.add_message(self.chat_id, {"type": "ai", "mex": ai_text})
+
         elif tool_name == "QUIZ_TOOL":
             quiz = response.get("result")
             if quiz:
                 self.quiz_manager.add_to_buffer(quiz)
-                ai_text = "Ho generato un nuovo quiz (buffer)."
+                logger.info(f"Ho generato {len(quiz)} quiz (buffer).")
+
+            ai_text = response.get("ai_response", "Quiz generati.")
+            self.chat_repository.add_message(self.chat_id, {"type": "ai", "mex": ai_text})
+            logger.info("AI Quiz response saved to chat history.")
 
     # Docs
     def add_document(self, path):
