@@ -46,9 +46,13 @@ class ContextFactory:
 class IToolStrategy(ABC):
 
     def _retrieve_documents(self, retriever, user_query):
+        if hasattr(retriever, "retrieve_and_explain"):
+            return retriever.retrieve_and_explain(user_query)
         return retriever.invoke(user_query)
 
     def format_docs(self, docs):
+        if isinstance(docs[0], dict):
+            return "\n\n".join(item.get("document_content", "") for item in docs)
         return "\n\n".join(doc.page_content for doc in docs)
 
     @abstractmethod

@@ -3,14 +3,13 @@ import glob
 import logging
 import os
 
-from langchain_classic.retrievers import ContextualCompressionRetriever
-from langchain_cohere import CohereRerank
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_classic.chains import RetrievalQA
 
 from rag_logic.ingestion.DocumentLoaderStrategy import *
+from rag_logic.ingestion.ExplainableRetriever import ExplainableRetriever
 
 logging.basicConfig(
     level=logging.INFO,
@@ -45,11 +44,8 @@ class IngestionFlow(object):
                     embedding_function=self.embeddings,
                     persist_directory=self.persist_dir)
 
-        self.retriever_vs = RetrievalBuilder.build(self.vectorstore)
+        self.retriever_vs = ExplainableRetriever(self.vectorstore)
         self.splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=200, separators=["\n\n", "\n", ". ", " ", ""])
-        #self.llm = LLM() #ChatOllama(model="llama3:latest", temperature=0.1, top_p=0.95, top_k=40)
-        #self.qa_chain = RetrievalQA.from_chain_type(llm=self.llm, retriever=self.retriever_vs, return_source_documents=True)
-        #self.qa_chain = create_retrieval_chain(self.retriever_vs, self.llm)
 
         self.strategies = {
             ".pdf": PDFLoaderStrategy(),
@@ -74,14 +70,13 @@ class IngestionFlow(object):
             persist_directory=self.persist_dir
         )
 
-        self.retriever_vs = RetrievalBuilder.build(self.vectorstore)
-        #self.qa_chain.retriever = self.retriever_vs
+        self.retriever_vs = ExplainableRetriever(self.vectorstore)
         logger.info("Vectorstore ricaricato con successo.")
         return True
 
     @property
     def retriever(self):
-        return self.retriever_vs
+        return self.retriever_vs.retriever
 
     def add_document_to_vectorstore(self, file_path: str):
         """
@@ -189,26 +184,3 @@ class IngestionFlow(object):
         except Exception as e:
             logger.exception(f"Errore cancellazione: {e}")
 
-
-class RetrievalBuilder:
-    @staticmethod
-    def build(vectorstore, top_k=20, rerank_top_n=5):
-
-        base_retriever = vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": top_k},
-        )
-
-        try:
-            compressor = CohereRerank(
-                model="rerank-multilingual-v3.0",
-                top_n=rerank_top_n,
-            )
-
-            return ContextualCompressionRetriever(
-                base_retriever=base_retriever,
-                base_compressor=compressor,
-            )
-        except Exception as e:
-            logger.warning(f"Cohere Rerank non disponibile (manca API Key?). Fallback su base retriever. Errore: {e}")
-            return base_retriever

@@ -18,7 +18,7 @@ class DocumentManager:
     @property
     def retriever(self):
         """Espone il retriever per la RAG pipeline."""
-        return self.ingestion.retriever_vs
+        return self.ingestion.retriever
 
     def reload_ingestion(self):
         """Ricarica il vectorstore (utile al restart)."""

@@ -13,7 +13,7 @@ class QATool(IToolStrategy):
     def execute(self, retriever, query: dict, language="italian", toon_format: bool = False):
 
         user_query = query.get("user_query")
-        summary = query.get("summary")
+        summary = query.get("summary", "Nessuna storia precedente disponibile.")
 
         filtered_docs = self._retrieve_documents(retriever, user_query)
 
@@ -65,9 +65,22 @@ class QATool(IToolStrategy):
             "user_query": user_query,
         })
 
+        if filtered_docs and isinstance(filtered_docs[0], dict):
+            final_sources = filtered_docs
+        else:
+            final_sources = [
+                {
+                    "document_content": doc.page_content,
+                    "metadata": doc.metadata,
+                    "explanation_text": "Recuperato tramite similarità standard.",
+                    "score": 0.0
+                }
+                for doc in filtered_docs
+            ]
+
         return  {
             "type": "QA",
             "ai_response": response ,
-            "docs_source": filtered_docs,
+            "docs_source": final_sources,
             "metadata": {"language": language}
         }
