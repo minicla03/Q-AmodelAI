@@ -1,12 +1,22 @@
-from dotenv import load_dotenv
+import asyncio
+import sys
 import os
 
-load_dotenv("../../.env.local")
-print(os.getenv("OPENAI_API_KEY"))
+import ollama
+from dotenv import load_dotenv
 
-base_path = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.join(base_path, "..", "data")
-data_path = os.path.abspath(data_path)
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '../../..'))
+sys.path.append(project_root)
+
+data_path = os.path.join(project_root, "evaluation", "tool_eval","data")
+
+base_env = os.path.join(project_root, ".env")
+local_env = os.path.join(project_root, "evaluation", ".env.local")
+
+load_dotenv(base_env)
+load_dotenv(local_env, override=True)
 
 import logging
 
@@ -21,7 +31,7 @@ from evaluation.tool_eval.qa_tool.metrics import custom_metrics
 from evaluation.tool_eval.qa_tool.report_gen import generate_html_results
 
 from deepeval import evaluate
-from deepeval.models import OllamaModel, DeepSeekModel
+from deepeval.models import OllamaModel
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import (
     ContextualPrecisionMetric,
@@ -30,6 +40,44 @@ from deepeval.metrics import (
     AnswerRelevancyMetric,
     FaithfulnessMetric
 )
+
+class RateLimitedOllamaModel(OllamaModel):
+    def __init__(self, model, *args, **kwargs):
+        super().__init__(model=model, *args, **kwargs)
+        self.semaphore = asyncio.Semaphore(1)
+
+    async def a_generate(self, prompt: str, schema=None):
+        async with self.semaphore:
+            client = ollama.AsyncClient(host=self.base_url)
+
+            # Parametri per forzare il JSON se richiesto
+            kwargs = {}
+            if schema:
+                kwargs["format"] = "json"
+
+            response = await client.chat(
+                model=self.model_name,
+                messages=[{'role': 'user', 'content': prompt}],
+                **kwargs
+            )
+
+            content = response['message']['content']
+
+            content = content.strip()
+            if content.startswith("```json"):
+                content = content[7:]
+            elif content.startswith("```"):
+                content = content[3:]
+
+            if content.endswith("```"):
+                content = content[:-3]
+
+            content = content.strip()
+
+            if schema:
+                return schema.model_validate_json(content), 0.0
+
+            return content, 0.0
 
 CONFIGS = [
     {"summary": None, "toon_format": False},
@@ -43,7 +91,7 @@ def evaluate_qa_tool(dataset, retrieval):
     results = []
     qa_tool = QATool()
 
-    ollama_model = DeepSeekModel(model="deepseek-chat", api_key=os.getenv("OPENAI_API_KEY"))
+    ollama_model = RateLimitedOllamaModel(model="gpt-oss:120b-cloud")
 
     metrics = [
         AnswerRelevancyMetric(model=ollama_model),
@@ -95,7 +143,7 @@ def evaluate_qa_tool(dataset, retrieval):
                 expected_output=test_case_data["expected_answer"]
             )
 
-            deepeval_res = evaluate([llm_test_case], metrics=metrics, print_results=True)
+            deepeval_res = evaluate([llm_test_case], metrics=metrics)
 
             results.append({
                 "query": user_query,

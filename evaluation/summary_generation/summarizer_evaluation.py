@@ -9,8 +9,6 @@ from dotenv import load_dotenv
 
 import logging
 import json
-from pathlib import Path
-from html import escape
 
 from deepeval.dataset import Golden, EvaluationDataset
 from deepeval.evaluate import evaluate
