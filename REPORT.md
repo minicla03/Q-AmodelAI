@@ -80,7 +80,19 @@ The routing agent was evaluated on 51 queries with both JSON and TOON format inp
 | FLASHCARD_TOOL | 36 | 14 | 38.89% |
 | QUIZ_TOOL | 32 | 7 | 21.88% |
 
-The QA_TOOL achieves perfect accuracy. Lower performance for FLASHCARD_TOOL and QUIZ_TOOL occurs with ambiguous queries, informal language, cross-language typos, and implicit tool requests.
+**Successful Test Cases (Examples):**
+- *QA*: "Spiegami in modo semplice il funzionamento del protocollo MQTT" ✓
+- *QA*: "Explain how SSL/TLS works in simple terms" ✓
+- *Flashcard*: "Generami 5 flashcard sul capitolo del Fog Computing" ✓
+- *Quiz*: "Fammi un quiz a risposta multipla sul machine learning supervisionato" ✓
+
+**Challenging Cases (Failures):**
+- "Quiz!" → Predicted QA_TOOL (minimal input)
+- "Fashcards sobre AI plz" → Predicted QA_TOOL (typo)
+- "Genérame un cuestionario sobre seguridad" → Predicted FLASHCARD_TOOL
+- "Crea flashcards sobre Kubernetes in italiano" → Predicted QA_TOOL (mixed language)
+
+The QA_TOOL achieves perfect accuracy. Lower performance occurs with typos, minimal/ambiguous input, and cross-language queries.
 
 ### 5.2 QA Tool Performance
 
