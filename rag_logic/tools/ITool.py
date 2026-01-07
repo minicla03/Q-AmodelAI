@@ -47,6 +47,7 @@ class IToolStrategy(ABC):
 
     def _retrieve_documents(self, retriever, user_query):
         if hasattr(retriever, "retrieve_and_explain"):
+            print("Retrieving documents and explaining...")
             return retriever.retrieve_and_explain(user_query)
         return retriever.invoke(user_query)
 

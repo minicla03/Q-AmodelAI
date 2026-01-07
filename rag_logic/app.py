@@ -248,6 +248,16 @@ def main():
                         ai_text = response.get("ai_response", "Nessuna risposta.")
                         print(f"\n(AI) > {ai_text}")
 
+                        if response.get("type") == "QA" and "docs_source" in response:
+                            explanation = response.get("docs_source")
+                            print(f"[Explanation] \n Sources used: {len(explanation)}")
+                            for result in explanation:
+                                print(f"\nDocument {result['rank']} (Confidence: {result['confidence_level']})")
+                                print(f"   Source: Page {result['metadata']['page_number']}")
+                                print(f"   Score: {result['score']:.3f}")
+                                print(f"   Reason: {result['explanation_text']}")
+                                print(f"   Keywords: {result['key_terms']}")
+
                         if "flashcard" in ai_text.lower() and "buffer" in ai_text.lower():
                             print(" [!] Nuove flashcard in memoria. Usa /flashcards per vederle.")
 

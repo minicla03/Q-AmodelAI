@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import os
+import time
 
 import ollama
 from dotenv import load_dotenv
@@ -102,6 +103,10 @@ def evaluate_qa_tool(dataset, retrieval):
     ]
 
     for idx, test_case_data in enumerate(dataset):
+
+        if idx==5 or idx==10 or idx==15 or idx==20:
+            time.sleep(1800)
+
         for config in CONFIGS:
 
             user_query = test_case_data["query"]
@@ -124,7 +129,16 @@ def evaluate_qa_tool(dataset, retrieval):
             if isinstance(actual_output, dict):
                 actual_output = str(actual_output)
 
-            retrieval_context = [doc.page_content for doc in output.get("docs_source", [])]
+            raw_sources = output.get("docs_source", [])
+            retrieval_context = []
+
+            for item in raw_sources:
+                if isinstance(item, dict):
+                    retrieval_context.append(item.get("document_content", ""))
+                elif hasattr(item, "page_content"):
+                    retrieval_context.append(item.page_content)
+                else:
+                    retrieval_context.append(str(item))
 
             custom_res = custom_metrics(
                 actual_output,

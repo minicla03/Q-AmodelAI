@@ -41,13 +41,10 @@ class QATool(IToolStrategy):
             
             Domanda Utente: 
             {user_query}
+            
+            Storia Chat (Opzionale):
+            {summary}
         """
-
-        if summary:
-            user_prompt += """
-                Storia Chat (Opzionale):
-                {summary}
-            """
 
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
@@ -63,6 +60,7 @@ class QATool(IToolStrategy):
         response = qa_chain.invoke({
             "context": self.format_docs(filtered_docs),
             "user_query": user_query,
+            "summary": summary,
         })
 
         if filtered_docs and isinstance(filtered_docs[0], dict):

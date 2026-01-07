@@ -76,7 +76,7 @@ class IngestionFlow(object):
 
     @property
     def retriever(self):
-        return self.retriever_vs.retriever
+        return self.retriever_vs
 
     def add_document_to_vectorstore(self, file_path: str):
         """
@@ -138,9 +138,9 @@ class IngestionFlow(object):
             logger.warning(f"Nessun chunk generato da '{file_path}'.")
             return
 
-        self.vectorstore.add_documents(chunks)
+        self.vectorstore.add_documents(final_chunks)
 
-        logger.info(f"Added {len(chunks)} chunks from '{file_path}' to vectorstore.")
+        logger.info(f"Added {len(final_chunks)} chunks from '{file_path}' to vectorstore.")
 
     def add_documents_from_folder(self, folder_path: str):
         if not os.path.exists(folder_path):
