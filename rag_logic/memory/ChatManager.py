@@ -135,7 +135,8 @@ class ChatManager:
                 message_count=msg_count)
 
             response_payload = {
-                "ai_response": final_state.answer if final_state.answer else "Fatto."
+                "ai_response": final_state.answer if final_state.answer else "Fatto.",
+                "docs_source": final_state.explanation if final_state.explanation else "Nessuna spiegazione."
             }
 
             if final_state.summary:

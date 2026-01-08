@@ -11,13 +11,22 @@ class QATool(IToolStrategy):
         super().__init__()
 
     def execute(self, retriever, query: dict, language="italian"):
-
         user_query = query.get("user_query")
         summary = query.get("summary", "Nessuna storia precedente disponibile.")
 
         filtered_docs = self._retrieve_documents(retriever, user_query)
 
+        if not user_query:
+            return {
+                "type": "ERROR",
+                "ai_response": "Si è verificato un errore interno: query mancante.",
+                "docs_source": [],
+                "metadata": {"language": language}
+            }
+
+
         if not filtered_docs:
+            print("[QATool] Nessun documento trovato nel contesto. Interruzione anticipata.")
             return {
                 "type": "QA",
                 "ai_response": "Informazione non presente nel contesto.",
@@ -25,7 +34,6 @@ class QATool(IToolStrategy):
                 "metadata": {"language": language}
             }
 
-        # Prepara il prompt per la generazione della risposta
         system_prompt = f"""
             Answer in {language} clearly and simply,
             explaining the main concepts in a way that’s easy to understand even for non-experts.
@@ -38,10 +46,10 @@ class QATool(IToolStrategy):
         user_prompt = """
             Contesto:
             {context}
-            
+
             Domanda Utente: 
             {user_query}
-            
+
             Storia Chat (Opzionale):
             {summary}
         """
@@ -76,9 +84,9 @@ class QATool(IToolStrategy):
                 for doc in filtered_docs
             ]
 
-        return  {
+        return {
             "type": "QA",
-            "ai_response": response ,
+            "ai_response": response,
             "docs_source": final_sources,
             "metadata": {"language": language}
         }

@@ -24,9 +24,9 @@ class PlannerAgent:
         self.retriever = retriever
         self.language_hint=language_hint
 
-    def _planner_agent(self, state: AgentState) -> str:
+    def _llm_router(self, state: AgentState) -> str:
 
-        user_query=state.query["user_query"]
+        user_query=state.user_query
         logger.info("Avvio router_agent per query: %s", user_query)
 
         template = """
@@ -34,13 +34,12 @@ class PlannerAgent:
             Your job is to analyze the user's request and decide which function should be executed.
             
             User Query: "{input}"
+            Context/History: "{history}"
             
             Available functions:
             1. QA_TOOL → Answers a question based on the context retrieved from documents.
             2. FLASHCARD_TOOL → Generates study flashcards (question/answer pairs) from the content.
             3. QUIZ_TOOL → Generates quiz from the content.
-            4. SUMMARY_TOOL → generate conversation summary
-            5. STOP → finish the process
             
             Guidelines:
             - Use the language of the user's query if detectable, otherwise fallback to {language_hint}.
@@ -48,17 +47,6 @@ class PlannerAgent:
             - If the query asks to generate flashcards → FLASHCARD_TOOL.
             - If the query asks to generate quiz questions → QUIZ_TOOL.
             - If multiple intents are present, choose the one explicitly requested last.
-            - PRIORITY RULE: If "{msg_count}" > "{threshold}" AND "SUMMARY_TOOL" is NOT in "Previous actions taken", you MUST choose SUMMARY_TOOL immediately, regardless of the user query.
-            - If "SUMMARY_TOOL" was just executed, proceed to handle the user's actual query (e.g., QA_TOOL).
-            - If user explicitly asks for a summary → SUMMARY_TOOL.
-            
-            Few-shot examples:
-            - User (Italian): Spiegami MQTT → QA_TOOL
-            - User (Italian): Crea flashcards su MQTT → FLASHCARD_TOOL
-            - User (English): Make study flashcards for Edge computing → FLASHCARD_TOOL
-            - User (Spanish): ¿Cuál es la diferencia entre Edge y Fog? → QA_TOOL
-            - User (French): Explique-moi HTTPS → QA_TOOL
-            - User (German): Erstelle Lernkarten über RAM und ROM → FLASHCARD_TOOL
             
             Respond ONLY with one of: QA_TOOL, FLASHCARD_TOOL, QUIZ_TOOL. No extra text, punctuation, or explanation.
         """
@@ -72,11 +60,10 @@ class PlannerAgent:
         )
 
         try:
-            response =response = chain.invoke({
+            response = chain.invoke({
                 "input": user_query,
                 "history": ", ".join(state.history),
-                "msg_count": state.message_count,
-                "threshold": self.SUMMARY_THRESHOLD
+                "language_hint": self.language_hint,
             })
             logger.info("Invio messaggi al modello LLM...")
 
@@ -98,61 +85,88 @@ class PlannerAgent:
             logger.debug("Traceback completo:", exc_info=True)
             return "QA_TOOL"
 
+    def _plan_next_action(self, state: AgentState) -> str:
+        query_lower = state.user_query.lower()
+
+        if state.has_answer and state.steps > 0:
+            if any(k in query_lower for k in ["riassumi", "summary", "sintesi"]):
+                if not state.has_summary:
+                    state.summary_reason = "explicit"
+                    return "SUMMARY_TOOL"
+                return "STOP"
+
+        if (state.message_count >= self.SUMMARY_THRESHOLD
+                and not state.has_summary and not state.has_answer):
+            state.summary_reason = "implicit"
+            return "SUMMARY_TOOL"
+
+        return self._llm_router(state)
+
     def execute_agent(self, query: str, conversation_history: list = None, message_count: int = 0) -> AgentState:
-        state = AgentState(query=query, language_hint=self.language_hint, message_count=message_count)
+        state = AgentState(user_query=query, language_hint=self.language_hint, message_count=message_count)
         state.retriever = self.retriever
 
         while not state.done and state.steps < self.MAX_STEPS:
 
             logger.info("Step %d: Pianificazione prossima azione...", state.steps + 1)
-            action = self._planner_agent(state)
+
+            # Plan
+            action = self._plan_next_action(state)
             logger.info("Planner ha scelto: %s", action)
 
+            # Execute
             if action == "STOP":
                 state.done = True
                 break
 
-            if action == "SUMMARY_TOOL":
+            context = ContextFactory.create(action)
+            if context is None:
+                logger.warning("Tool '%s' non trovato, passo al prossimo", action)
+                state.done = True
+                continue
 
-                is_explicit_request = "riassun" in query.lower() or "summar" in query.lower()
-                if not is_explicit_request:
-                    logger.info("Auto-summary completato. Continuo per rispondere all'utente...")
-                    state.done = False
+            tool_input = {}
+            if action == "SUMMARY_TOOL":
+                tool_input = {"conversation_history": conversation_history}
+            else:
+                tool_input = {
+                    "user_query": state.user_query,
+                    "summary": state.summary
+                }
+
+            try:
+                result = context.execute(
+                    retriever=state.retriever,
+                    query=tool_input,
+                    language=state.language_hint
+                )
+            except Exception as e:
+                logger.error(f"Error executing {action}: {e}")
+                state.done = True
+                break
+
+            # Observe
+            state.history.append(action)
+
+            if "docs" in result:
+                state.docs.extend(result["docs"])
+            if "ai_response" in result:
+                state.answer = result["ai_response"]
+                state.explanation = result["docs_source"]
+                state.has_answer = True
+            if "summary" in result:
+                state.summary = result["summary"]
+                state.has_summary = True
+
+            if action == "SUMMARY_TOOL":
+                if state.summary_reason == "implicit":
+                    logger.info("Implicit summary done. Proceeding to answer user query.")
                 else:
                     state.done = True
 
-
-            if action in ["QA_TOOL", "FLASHCARD_TOOL", "QUIZ_TOOL"]:
-                context = ContextFactory.create(action)
-                if context is None:
-                    logger.warning("Tool '%s' non trovato, passo al prossimo", action)
-                    state.done = True
-                    continue
-
-                query_input = {"query": state.query}
-                if action == "SUMMARY_TOOL" and conversation_history is not None:
-                    query_input = {"conversation_history": conversation_history}
-
-                result = context.execute(
-                    retriever=state.retriever,
-                    query=query_input,
-                    language=state.language_hint
-                )
-
-                if "docs" in result:
-                    state.docs.extend(result["docs"])
-                if "answer" in result:
-                    state.answer = result["answer"]
-                if "summary" in result:
-                    state.summary = result["summary"]
-
-                if action in ["FLASHCARD_TOOL", "QUIZ_TOOL", "SUMMARY_TOOL"]:
-                    state.done = True
-
-            elif action == "STOP":
+            if action in ["QA_TOOL", "FLASHCARD_TOOL", "QUIZ_TOOL"] and state.has_answer:
                 state.done = True
 
-            state.history.append(action)
             state.steps += 1
 
         logger.info("Processo completato. Azioni eseguite: %s", state.history)

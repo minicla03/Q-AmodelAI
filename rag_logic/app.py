@@ -236,7 +236,6 @@ def main():
                         user_query=user_input,
                         default_language="italian",
                         memory_ability=True,
-                        toon_format=False
                     )
                     elapsed = time.time() - start_time
 
