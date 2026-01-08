@@ -13,7 +13,7 @@ class QuizTool(IToolStrategy):
     def __init__(self):
         super().__init__()
 
-    def execute(self, retriever, query, language_hint: str = "italian", toon_format: bool = False, n_questions=5,
+    def execute(self, retriever, query, language_hint: str = "italian", n_questions=5,
                 difficulty="medium"):
 
         user_query_str = query.get("user_query", "")

@@ -16,8 +16,8 @@ from rag_logic.memory.FlashcardManger import FlashcardManager
 from rag_logic.memory.QuizManager import QuizManager
 from rag_logic.utils import  detect_language_from_query
 
-from rag_logic.agents.routing_agent import router_agent
-from rag_logic.agents.summarizer_agent import summary_agent
+from rag_logic.agents.AgentState import AgentState
+from rag_logic.agents.PlannerAgent import PlannerAgent
 
 from rag_logic.tools.ITool import ContextFactory
 
@@ -101,7 +101,7 @@ class ChatManager:
             self.ready = False
             logger.info("Sessione chiusa.")
 
-    def execute_rag_pipeline(self, user_query, default_language="italian", memory_ability=True, toon_format=False):
+    def execute_rag_pipeline(self, user_query, default_language="italian", memory_ability=True):
 
         if not self.ready:
             return {
@@ -113,72 +113,63 @@ class ChatManager:
         language = detect_language_from_query(user_query) or default_language
         logger.info("Lingua rilevata: %s", language)
 
-        tool_name = router_agent(user_query, language)
-        logger.info(f"Tool selezionato dal router: {tool_name}")
-
-        context = ContextFactory.create(tool_name)
-        if not context:
-            logger.error(f"ContextFactory ha restituito None per il tool '{tool_name}'")
-            return {"error": f"Tool '{tool_name}' non supportato o errore di creazione", "ai_response": None}
+        history_messages = []
+        msg_count = 0
 
         if memory_ability:
             try:
-                history_mex = self.chat_repository.get_messages(self.chat_id)
-                if len(history_mex) >= self.MIN_MESSAGES_FOR_SUMMARY:
-                    logger.info("Aggiornamento summary conversazione...")
-                    self.last_summary = summary_agent(history_mex, toon_format, language_hint=language)
-                    logger.info("Summary aggiornato.")
+                history_messages = self.chat_repository.get_messages(self.chat_id)
+                msg_count = len(history_messages)
             except Exception as e:
-                logger.warning(f"Errore durante l'aggiornamento del summary: {e}")
+                logger.warning(f"Impossibile recuperare history: {e}")
 
-        query={
-            "user_query": user_query,
-            "summary": self.last_summary,
-        }
+        agent = PlannerAgent(
+            retriever=self.doc_manager.retriever,
+            language_hint=language
+        )
 
         try:
-            logger.info("Esecuzione catena RAG con il contesto selezionato...")
-            response = context.execute(
-                self.doc_manager.retriever,
-                query,
-                language,
-                toon_format=toon_format
-            )
+            final_state = agent.execute_agent(
+                query=user_query,
+                conversation_history=history_messages,
+                message_count=msg_count)
 
-            self._update_memory(tool_name, user_query, response)
+            response_payload = {
+                "ai_response": final_state.answer if final_state.answer else "Fatto."
+            }
+
+            if final_state.summary:
+                self.last_summary = final_state.summary
+                logger.info("Internal summary updated.")
+
+            self._update_memory(final_state, user_query)
             logger.info("Esecuzione completata con successo.")
-            return response
+            return response_payload
+
         except Exception as e:
             logger.error(f"RAG Error: {e}", exc_info=True)
-            return {"error": str(e), "ai_response": None}
+            return {"error": str(e), "ai_response": "Si è verificato un errore durante l'elaborazione."}
 
-    def _update_memory(self, tool_name, user_query, response):
+    def _update_memory(self, state: AgentState, user_query: str):
 
         self.chat_repository.add_message(self.chat_id, {"type": "human", "mex": user_query})
-        logger.info("User message added to chat history.")
 
-        if tool_name == "QA_TOOL":
-            ai_text_response = response.get("ai_response", "Contenuto generato.")
-            self.chat_repository.add_message(self.chat_id, {"type": "ai", "mex": ai_text_response})
-            logger.info("AI QA response saved to chat history.")
+        generated_artifacts = [d for d in state.docs if isinstance(d, dict)]
 
-        elif tool_name == "FLASHCARD_TOOL":
-            flashcards = response.get("result", [])
-            if flashcards:
-                self.flashcard_manager.add_to_buffer(flashcards)
-                logger.info(f"Ho generato {len(flashcards)} flashcard (buffer).")
-            ai_text = response.get("ai_response", "Flashcard generate.")
-            self.chat_repository.add_message(self.chat_id, {"type": "ai", "mex": ai_text})
+        if "FLASHCARD_TOOL" in state.history:
+            if generated_artifacts:
+                self.flashcard_manager.add_to_buffer(generated_artifacts)
+                logger.info(f"Buffered {len(generated_artifacts)} flashcards.")
+                if not state.answer: state.answer = "Flashcard generate e salvate."
 
-        elif tool_name == "QUIZ_TOOL":
-            quiz = response.get("result")
-            if quiz:
-                self.quiz_manager.add_to_buffer(quiz)
-                logger.info(f"Ho generato {len(quiz)} quiz (buffer).")
+        elif "QUIZ_TOOL" in state.history:
+            if generated_artifacts:
+                self.quiz_manager.add_to_buffer(generated_artifacts)
+                logger.info(f"Buffered {len(generated_artifacts)} quizzes.")
+                if not state.answer: state.answer = "Quiz generati e salvati."
 
-            ai_text = response.get("ai_response", "Quiz generati.")
-            self.chat_repository.add_message(self.chat_id, {"type": "ai", "mex": ai_text})
-            logger.info("AI Quiz response saved to chat history.")
+        if state.answer:
+            self.chat_repository.add_message(self.chat_id, {"type": "ai", "mex": state.answer})
 
     # Docs
     def add_document(self, path):

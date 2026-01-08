@@ -16,7 +16,7 @@ from deepeval.test_case import LLMTestCase
 
 from evaluation.summary_generation import summary_metrics
 from evaluation.summary_generation.html_report_gen import generate_html_report
-from rag_logic.agents.summarizer_agent import summary_agent
+from rag_logic.tools.SummarizerTool import summary_agent
 from rag_logic.utils import detect_language_from_query
 
 from summary_testset import TEST_CASE

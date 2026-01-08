@@ -5,7 +5,7 @@ from deepeval.test_case import LLMTestCase
 
 from evaluation.tool_selection_eval.router_testset import TEST_ROUTER_DATASET, COMPLEX_CASES
 from evaluation.tool_selection_eval.gen_report import generate_test_result_html
-from rag_logic.agents.routing_agent import router_agent
+from rag_logic.agents.PlannerAgent import router_agent
 from rag_logic.utils import detect_language_from_query
 
 logger = logging.getLogger(__name__)

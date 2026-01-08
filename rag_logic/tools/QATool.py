@@ -10,7 +10,7 @@ class QATool(IToolStrategy):
     def __init__(self):
         super().__init__()
 
-    def execute(self, retriever, query: dict, language="italian", toon_format: bool = False):
+    def execute(self, retriever, query: dict, language="italian"):
 
         user_query = query.get("user_query")
         summary = query.get("summary", "Nessuna storia precedente disponibile.")

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from rag_logic.agents.routing_agent import router_agent
+from rag_logic.agents.PlannerAgent import router_agent
 
 def _mock_llm(response_text):
     mock_llm_instance = MagicMock()

@@ -4,7 +4,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from rag_logic.llm.LLM import LLM
-from rag_logic.tools.QATool import QATool
+from rag_logic.tools.ITool import IToolStrategy
 import json
 
 
@@ -13,7 +13,7 @@ class FlashcardTool(IToolStrategy):
     def __init__(self):
         super().__init__()
 
-    def execute(self, retriever, query, language_hint="italian", toon_format: bool = False, n_flashcard=10, difficulty = "medium"):
+    def execute(self, retriever, query, language_hint="italian", n_flashcard=10, difficulty = "medium"):
 
         user_query_str = query.get("user_query", "")
 

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from langchain_core.messages import SystemMessage, HumanMessage
-from rag_logic.agents.summarizer_agent import summary_agent
+from rag_logic.tools.SummarizerTool import summary_agent
 
 class TestSummaryAgent(unittest.TestCase):
 

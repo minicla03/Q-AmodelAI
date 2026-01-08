@@ -57,5 +57,5 @@ class IToolStrategy(ABC):
         return "\n\n".join(doc.page_content for doc in docs)
 
     @abstractmethod
-    def execute(self, retriever, query: dict, language: str = "italian", toon_format: bool = False) -> dict:
+    def execute(self, retriever, query: dict, language: str = "italian") -> dict:
         pass
