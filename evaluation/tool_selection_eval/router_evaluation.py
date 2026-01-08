@@ -5,11 +5,26 @@ from deepeval.test_case import LLMTestCase
 
 from evaluation.tool_selection_eval.router_testset import TEST_ROUTER_DATASET, COMPLEX_CASES
 from evaluation.tool_selection_eval.gen_report import generate_test_result_html
-from rag_logic.agents.PlannerAgent import router_agent
+from rag_logic.agents.AgentState import AgentState
+from rag_logic.agents.PlannerAgent import PlannerAgent
 from rag_logic.utils import detect_language_from_query
 
 logger = logging.getLogger(__name__)
 
+
+def get_router_prediction(query: str) -> str:
+
+    agent = PlannerAgent(retriever=None, language_hint="italian")
+
+    state = AgentState(user_query=query, language_hint="italian")
+    state.history = []
+
+    try:
+        predicted_tool = agent._llm_router(state)
+        return predicted_tool
+    except Exception as e:
+        logger.error(f"Errore durante la predizione per query '{query}': {e}")
+        return "ERROR"
 
 def aggregate_metrics_calculate(results):
 
@@ -67,13 +82,12 @@ def evaluate_router(test_dataset):
 
         for toon_format in toon_format_options:
 
-            predicted = router_agent(query, language_hint,)
+            predicted = get_router_prediction(query)
 
             test_case = LLMTestCase(
                 input=query,
                 actual_output=predicted,
                 expected_output=expected,
-                #additional_metadata = log_hyperparameters
             )
 
             # Metrica: match esatto tra expected e predicted

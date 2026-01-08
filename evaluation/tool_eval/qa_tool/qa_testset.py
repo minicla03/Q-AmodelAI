@@ -3,49 +3,13 @@ TEST_CASES = [
         "query": "Cosa sono i servizi in Android?",
         "expected_answer": (
             "I servizi in Android sono componenti che eseguono operazioni in background senza mostrare un'interfaccia. "
-            "Possono continuare a funzionare anche se l'rag_qa non è visibile. "
+            "Possono continuare a funzionare anche se l'app non è visibile. "
             "Ci sono tipi diversi come Started Service (avviato da un componente), Bound Service (permette a componenti di connettersi) e Foreground Service (che l'utente nota). "
             "Hanno un ciclo di vita gestito da metodi come onCreate(), onStartCommand(), onBind() e onDestroy()."
         ),
         "language_hint": "italian",
         "relevant_docs": ["Android.pdf"],
-        "summary": None
-    },
-    {
-        "query": "Cos'è un'activity?",
-        "expected_answer": (
-            "Un'activity in Android è una schermata con cui l'utente interagisce. "
-            "È una classe che gestisce il ciclo di vita con metodi come onCreate(), onStart(), onResume(), onPause(), onStop() e onDestroy(). "
-            "Le activity comunicano tramite Intent e si dichiarano nel file AndroidManifest.xml. "
-            "Un'rag_qa può avere più activity con scopi diversi."
-        ),
-        "language_hint": "italian",
-        "relevant_docs": ["Android.pdf"],
-        "summary": None
-    },
-    {
-        "query": "A cosa serve il manifest.xml?",
-        "expected_answer": (
-            "Il file AndroidManifest.xml è essenziale per configurare un'rag_qa Android. "
-            "Contiene informazioni su tutti i componenti come activity, servizi, e permessi richiesti. "
-            "Definisce quale activity è quella principale e può specificare filtri per gli intent. "
-            "Si trova nella cartella principale del progetto."
-        ),
-        "language_hint": "italian",
-        "relevant_docs": ["Android.pdf"],
-        "summary": None
-    },
-    {
-        "query": "Cos'è il modello a cascata in ingegneria del software?",
-        "expected_answer": (
-            "Il modello a cascata è un metodo di sviluppo software in cui le fasi seguono un ordine preciso e lineare: "
-            "analisi dei requisiti, progettazione, implementazione, test, rilascio e manutenzione. "
-            "Ogni fase si completa prima di iniziare la successiva, senza tornare indietro. "
-            "È semplice da gestire ma poco flessibile ai cambiamenti."
-        ),
-        "language_hint": "italian",
-        "relevant_docs": ["IngSw teo pt2.pdf"],
-        "summary": None
+        "summary": "L'utente è uno sviluppatore Junior che sta creando un'app di riproduzione musicale. Ha riscontrato un problema: quando l'utente chiude l'app o spegne lo schermo, la musica si interrompe. Ha provato a usare un semplice Thread Java, ma il sistema operativo uccide il processo per risparmiare memoria. Cerca una soluzione robusta e specifica del framework Android per mantenere l'attività in background."
     },
     {
         "query": "Cos'è il pattern Observer in ingegneria del software?",
@@ -57,7 +21,7 @@ TEST_CASES = [
         ),
         "language_hint": "italian",
         "relevant_docs": ["Software Design.pdf"],
-        "summary": None
+        "summary": "L'utente sta progettando un sistema per una stazione meteo. Ha un oggetto 'DatiMeteo' che riceve aggiornamenti dai sensori e deve aggiornare automaticamente tre diversi display (temperatura, statistiche e previsioni) senza che l'oggetto 'DatiMeteo' conosca i dettagli specifici di questi display. Vuole disaccoppiare il codice e ha sentito parlare di un pattern comportamentale adatto a questo scopo."
     },
     {
         "query": "Come è strutturata una classe di testing?",
@@ -66,12 +30,11 @@ TEST_CASES = [
             "1. Setup, con metodi come setUp() o annotazioni @Before per preparare l'ambiente; "
             "2. Test, dove si usano metodi con assertion per controllare i risultati; "
             "3. Teardown, con metodi come tearDown() o @After per pulire le risorse. "
-            "Si possono usare mock per isolare dipendenze e si applica il principio AAA (Arrange-Act-Assert). "
-            "Framework comuni sono JUnit, pytest e Espresso."
+            "Si possono usare mock per isolare dipendenze e si applica il principio AAA (Arrange-Act-Assert)."
         ),
         "language_hint": "italian",
         "relevant_docs": ["IngSw teo pt2.pdf", "Android.pdf"],
-        "summary": None
+        "summary": "Il team sta adottando la metodologia TDD (Test Driven Development). L'utente ha notato che i suoi test precedenti fallivano in modo casuale perché le variabili non venivano resettate tra un'esecuzione e l'altra. Ha bisogno di capire la struttura standard di una classe JUnit, specificamente come gestire l'inizializzazione e la pulizia delle risorse prima e dopo ogni singolo test."
     },
     {
         "query": "What is the purpose of an oscilloscope?",
@@ -83,7 +46,7 @@ TEST_CASES = [
         ),
         "language_hint": "english",
         "relevant_docs": ["Misure Elettroniche.pdf"],
-        "summary": None
+        "summary": "The user is an electrical engineering student working on an analog amplifier project in the lab. They are trying to diagnose a signal distortion issue. They have been using a multimeter but realized it only gives average values and cannot show the fast, transient noise spikes that are causing the audio glitches. They need to understand what specific visualization capabilities this instrument offers."
     },
     {
         "query": "Explain the concept of RMS voltage.",
@@ -95,7 +58,7 @@ TEST_CASES = [
         ),
         "language_hint": "english",
         "relevant_docs": ["Misure Elettroniche.pdf", "Data Analytics.pdf"],
-        "summary": None
+        "summary": "The user is studying for a physics exam on AC circuits. They are confused about why the wall outlet is labeled as 230V when the calculation of the sine wave peak shows it reaches about 325V. They need a conceptual explanation relating AC voltage to the equivalent heat energy produced by a DC source to understand the term 'effective value'."
     },
     {
         "query": "¿Qué es el análisis exploratorio de datos?",
@@ -106,7 +69,7 @@ TEST_CASES = [
         ),
         "language_hint": "spanish",
         "relevant_docs": ["Data Analytics.pdf"],
-        "summary": None
+        "summary": "El usuario es un analista de marketing que acaba de recibir un archivo CSV masivo con datos de comportamiento de clientes. Los datos están sucios, contienen valores nulos y posibles errores. Antes de intentar entrenar un algoritmo de predicción de ventas, quiere saber cuál es la metodología estándar para 'conocer' los datos, visualizar distribuciones y limpiar errores."
     },
     {
         "query": "¿Para qué sirve la regresión lineal?",
@@ -118,41 +81,7 @@ TEST_CASES = [
         ),
         "language_hint": "spanish",
         "relevant_docs": ["Data Analytics.pdf", "Misure Elettroniche.pdf"],
-        "summary": None
-    },
-    {
-        "query": "Qu'est-ce que le big data?",
-        "expected_answer": (
-            "Le big data désigne de très grands ensembles de données caractérisés par cinq aspects : volume, vélocité, variété, véracité et valeur. "
-            "Ces données dépassent les capacités des outils traditionnels et nécessitent des technologies spécifiques comme Hadoop ou Spark. "
-            "Le big data est utilisé pour l’analyse prédictive, la personnalisation et d’autres domaines, avec des défis liés au stockage et à la sécurité."
-        ),
-        "language_hint": "french",
-        "relevant_docs": ["Data Analytics.pdf"],
-        "summary": None
-    },
-    {
-        "query": "À quoi sert une analyse prédictive?",
-        "expected_answer": (
-            "L’analyse prédictive utilise des données historiques et des algorithmes pour prévoir des événements futurs. "
-            "Elle emploie des méthodes comme la régression et les arbres de décision. "
-            "Ses applications incluent la prévision de la demande, la détection de fraudes et le marketing ciblé. "
-            "Le processus comprend la collecte, la préparation des données, l’entraînement des modèles et la validation."
-        ),
-        "language_hint": "french",
-        "relevant_docs": ["DataAnalytics.pdf"],
-        "summary": None
-    },
-    {
-        "query": "Was ist eine Klasse in der objektorientierten Programmierung?",
-        "expected_answer": (
-            "Eine Klasse ist ein Bauplan für Objekte in der objektorientierten Programmierung. "
-            "Sie definiert Attribute und Methoden, die die Objekte besitzen. "
-            "Objekte sind Instanzen der Klasse und verhalten sich entsprechend den definierten Methoden."
-        ),
-        "language_hint": "german",
-        "relevant_docs": ["OOP_Grundlagen.pdf"],
-        "summary": None
+        "summary": "Un investigador biológico está estudiando el efecto de la temperatura ambiente en la tasa de crecimiento de una planta específica. Ha recopilado datos experimentales y sospecha que existe una relación directa y proporcional. Necesita confirmar si este modelo estadístico es adecuado para predecir el crecimiento futuro basándose en temperaturas no observadas."
     },
     {
         "query": "Welche Arten von Services gibt es in Android?",
@@ -163,7 +92,7 @@ TEST_CASES = [
         ),
         "language_hint": "german",
         "relevant_docs": ["Android.pdf"],
-        "summary": None
+        "summary": "Der Entwickler baut eine Fitness-Tracking-App. Er muss entscheiden, welche Architekturkomponente er verwenden soll: Eine, die einfach Daten im Hintergrund synchronisiert (wie ein Download), oder eine, die aktiv eine Laufstrecke aufzeichnet und dem Benutzer eine Benachrichtigung anzeigt, damit das System den Prozess nicht beendet. Er braucht einen Überblick über die verfügbaren Service-Typen."
     },
     {
         "query": "Wie kommunizieren Activities untereinander?",
@@ -174,7 +103,7 @@ TEST_CASES = [
         ),
         "language_hint": "german",
         "relevant_docs": ["Android.pdf"],
-        "summary": None
+        "summary": "Der Benutzer erstellt eine E-Commerce-App. Er hat eine Listenansicht (Activity A) mit Produkten und eine Detailansicht (Activity B). Wenn der Nutzer auf ein Produkt klickt, muss Activity B geöffnet werden und wissen, welches Produkt (ID oder Name) angezeigt werden soll. Der Benutzer fragt nach dem Standardmechanismus für diesen Datentransfer und Bildschirmwechsel."
     },
     {
         "query": "Welche Aufgaben hat die AndroidManifest.xml?",
@@ -185,7 +114,7 @@ TEST_CASES = [
         ),
         "language_hint": "german",
         "relevant_docs": ["Android.pdf"],
-        "summary": None
+        "summary": "Ein Anfänger in der Android-Entwicklung hat eine neue Activity-Klasse im Java-Code erstellt, aber jedes Mal, wenn er versucht, sie zu starten, stürzt die App mit einer 'ActivityNotFoundException' ab. Wir haben bereits den Java-Code geprüft und er scheint korrekt zu sein. Der Verdacht liegt auf einer fehlenden Registrierung in den Konfigurationsdateien."
     },
     {
         "query": "Was versteht man unter Software-Design-Patterns?",
@@ -196,7 +125,7 @@ TEST_CASES = [
         ),
         "language_hint": "german",
         "relevant_docs": ["Software Design.pdf"],
-        "summary": None
+        "summary": "In einem Code-Review wurde dem Benutzer gesagt, sein Code sei schwer zu warten und er solle 'gängige Patterns' verwenden. Der Benutzer fühlt sich überfordert und möchte verstehen, ob Design Patterns fertige Code-Bibliotheken sind oder eher abstrakte Lösungskonzepte für architektonische Probleme, um die Kommunikation im Team zu verbessern."
     },
     {
         "query": "Welche Schritte umfasst eine typische Testklasse?",
@@ -207,7 +136,7 @@ TEST_CASES = [
         ),
         "language_hint": "german",
         "relevant_docs": ["IngSw teo pt2.pdf", "Android.pdf"],
-        "summary": None
+        "summary": "Der Benutzer schreibt Unit-Tests für eine Datenbankverbindung. Er hat das Problem, dass er vor jedem Test eine saubere Verbindung herstellen und sie danach schließen muss, um Seiteneffekte zu vermeiden. Er sucht nach der formalen Struktur (Setup/Teardown) und den Best Practices, um Tests unabhängig voneinander und wiederholbar zu machen."
     },
     {
         "query": "Was kann ein Oszilloskop messen?",
@@ -217,39 +146,7 @@ TEST_CASES = [
         ),
         "language_hint": "german",
         "relevant_docs": ["Misure Elettroniche.pdf"],
-        "summary": None
-    },
-    {
-        "query": "Warum wird RMS-Spannung verwendet?",
-        "expected_answer": (
-            "RMS-Spannung (Effektivspannung) gibt den Energiegehalt einer Wechselspannung in Bezug auf Gleichstrom wieder. "
-            "Sie wird als Quadratwurzel des Mittelwerts der quadrierten Momentanwerte über einen Zyklus berechnet. "
-            "RMS erleichtert die Vergleichbarkeit und Berechnung von Leistung bei Wechselspannung."
-        ),
-        "language_hint": "german",
-        "relevant_docs": ["Misure Elettroniche.pdf", "Data Analytics.pdf"],
-        "summary": None
-    },
-    {
-        "query": "Welche Schritte gehören zur explorativen Datenanalyse?",
-        "expected_answer": (
-            "Die explorative Datenanalyse umfasst die Untersuchung von Datensätzen mittels Statistik, Visualisierung und Mustererkennung. "
-            "Typische Schritte sind deskriptive Statistik, Grafiken wie Histogramme oder Streudiagramme, sowie die Erkennung von Ausreißern und Anomalien."
-        ),
-        "language_hint": "german",
-        "relevant_docs": ["Data Analytics.pdf"],
-        "summary": None
-    },
-    {
-        "query": "Welche Vorteile bietet lineare Regression?",
-        "expected_answer": (
-            "Die lineare Regression modelliert die Beziehung zwischen abhängigen und unabhängigen Variablen. "
-            "Sie erlaubt Vorhersagen, die Messung der Stärke von Zusammenhängen und die Identifikation relevanter Einflussgrößen. "
-            "Sie ist einfach zu interpretieren und weit verbreitet in Wirtschaft, Wissenschaft und Machine Learning."
-        ),
-        "language_hint": "german",
-        "relevant_docs": ["Data Analytics.pdf", "Misure Elettroniche.pdf"],
-        "summary": None
+        "summary": "Ein Tontechniker überprüft einen Vorverstärker auf Fehler. Er muss nicht nur wissen, ob Strom fließt, sondern will die Wellenform sehen, um zu prüfen, ob das Signal 'abgeschnitten' (Clipping) wird oder ob unerwünschtes Rauschen auf der Frequenz liegt. Er fragt nach den spezifischen Messmöglichkeiten dieses Geräts im Vergleich zu einfachen Messgeräten."
     },
     {
         "query": "Welche Technologien werden bei Big Data eingesetzt?",
@@ -259,17 +156,6 @@ TEST_CASES = [
         ),
         "language_hint": "german",
         "relevant_docs": ["Data Analytics.pdf"],
-        "summary": None
-    },
-    {
-        "query": "Wie funktioniert prädiktive Analyse?",
-        "expected_answer": (
-            "Prädiktive Analyse nutzt historische Daten und Algorithmen, um zukünftige Ereignisse vorherzusagen. "
-            "Sie umfasst Datensammlung, Datenaufbereitung, Modelltraining und Validierung. "
-            "Methoden wie Regression, Entscheidungsbäume oder maschinelles Lernen werden angewendet."
-        ),
-        "language_hint": "german",
-        "relevant_docs": ["DataAnalytics.pdf"],
-        "summary": None
+        "summary": "Ein IT-Architekt bei einem großen Einzelhändler plant die Migration von traditionellen SQL-Datenbanken zu einer modernen Data-Lake-Infrastruktur. Das Unternehmen sammelt jetzt Petabytes an unstrukturierten Daten (Logs, Bilder, Klicks). Der Benutzer benötigt einen Überblick über die aktuellen Frameworks für verteiltes Speichern und Verarbeiten (wie MapReduce-Konzepte), um eine Entscheidungsgrundlage für das Management zu erstellen."
     },
 ]

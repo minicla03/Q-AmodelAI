@@ -81,10 +81,8 @@ class RateLimitedOllamaModel(OllamaModel):
             return content, 0.0
 
 CONFIGS = [
-    {"summary": None, "toon_format": False},
-    {"summary": True, "toon_format": False},
-    #{"summary": None, "toon_format": True},
-    #{"summary": True, "toon_format": True},
+    {"summary": None},
+    {"summary": True},
 ]
 
 
@@ -92,7 +90,10 @@ def evaluate_qa_tool(dataset, retrieval):
     results = []
     qa_tool = QATool()
 
-    ollama_model = RateLimitedOllamaModel(model="gpt-oss:120b-cloud")
+    ollama_model = RateLimitedOllamaModel(
+        model="gpt-oss:120b-cloud",
+        #base_url="http://localhost:11434"
+    )
 
     metrics = [
         AnswerRelevancyMetric(model=ollama_model),
@@ -104,73 +105,82 @@ def evaluate_qa_tool(dataset, retrieval):
 
     for idx, test_case_data in enumerate(dataset):
 
-        if idx==5 or idx==10 or idx==15 or idx==20:
+        if idx==5 or idx==10:
             time.sleep(1800)
 
         for config in CONFIGS:
 
-            user_query = test_case_data["query"]
-            summary_text = test_case_data.get("summary") if config["summary"] else ""
+            try:
+                user_query = test_case_data["query"]
+                summary_text = test_case_data.get("summary") if config["summary"] else ""
 
-            processed_query = {
-                "user_query": user_query,
-                "summary": summary_text,
-            }
+                processed_query = {
+                    "user_query": user_query,
+                    "summary": summary_text,
+                }
 
-            language_hint = detect_language_from_query(user_query)
+                language_hint = detect_language_from_query(user_query)
 
-            output = qa_tool.execute(
-                retriever=retrieval,
-                query=processed_query,
-                toon_format=config["toon_format"]
-            )
+                output = qa_tool.execute(
+                    retriever=retrieval,
+                    query=processed_query,
+                )
 
-            actual_output = output.get("ai_response", "")
-            if isinstance(actual_output, dict):
-                actual_output = str(actual_output)
+                actual_output = output.get("ai_response", "")
+                if isinstance(actual_output, dict):
+                    actual_output = str(actual_output)
 
-            raw_sources = output.get("docs_source", [])
-            retrieval_context = []
+                label = "CON RIASSUNTO" if config["summary"] else "SENZA RIASSUNTO"
+                print(f"\n[{idx + 1}] {label}")
+                print(f"Q: {user_query}")
+                print(f"A: {actual_output[:150]}...")
+                print("-" * 40)
 
-            for item in raw_sources:
-                if isinstance(item, dict):
-                    retrieval_context.append(item.get("document_content", ""))
-                elif hasattr(item, "page_content"):
-                    retrieval_context.append(item.page_content)
-                else:
-                    retrieval_context.append(str(item))
+                raw_sources = output.get("docs_source", [])
+                retrieval_context = []
+                for item in raw_sources:
+                    if isinstance(item, dict):
+                        retrieval_context.append(item.get("document_content", ""))
+                    elif hasattr(item, "page_content"):
+                        retrieval_context.append(item.page_content)
+                    else:
+                        retrieval_context.append(str(item))
 
-            custom_res = custom_metrics(
-                actual_output,
-                test_case_data["expected_answer"],
-                language=language_hint
-            )
+                custom_res = custom_metrics(
+                    actual_output,
+                    test_case_data["expected_answer"],
+                    language=language_hint
+                )
 
-            input_text = user_query
-            if summary_text:
-                input_text += f"\nSummary: {summary_text}"
+                input_text = user_query
+                if summary_text:
+                    input_text += f"\nSummary: {summary_text}"
 
-            llm_test_case = LLMTestCase(
-                input=input_text,
-                actual_output=actual_output,
-                retrieval_context=retrieval_context,
-                expected_output=test_case_data["expected_answer"]
-            )
+                llm_test_case = LLMTestCase(
+                    input=input_text,
+                    actual_output=actual_output,
+                    retrieval_context=retrieval_context,
+                    expected_output=test_case_data["expected_answer"]
+                )
 
-            deepeval_res = evaluate([llm_test_case], metrics=metrics)
+                deepeval_res = evaluate([llm_test_case], metrics=metrics)
 
-            results.append({
-                "query": user_query,
-                "summary_used": config["summary"] is not None,
-                "toon_format": config["toon_format"],
-                "deepeval_result": deepeval_res,
-                "custom_metric_result": custom_res,
-            })
+                results.append({
+                    "query": user_query,
+                    "summary_used": config["summary"] is not None,
+                    "summary_label": "Con Riassunto" if config["summary"] else "Senza Riassunto",
+                    "actual_output": actual_output,
+                    "deepeval_result": deepeval_res,
+                    "custom_metric_result": custom_res,
+                })
 
-            print(f" -> Elaborato caso {idx + 1} [Summary={config['summary']}]")
-
+                print(f" -> Elaborato caso {idx + 1} [Summary={config['summary']}]")
+            except Exception as e:
+                print(f"\n!!! ERRORE CRITICO DURANTE IL CASO {idx + 1} !!!")
+                print(f"Errore: {e}")
+                print("Interruzione forzata. Salvataggio dei risultati parziali ottenuti finora...")
+                return results
     return results
-
 
 def start_qa_evaluation():
     dataset = TEST_CASES

@@ -1,0 +1,229 @@
+
+    <!DOCTYPE html>
+    <html lang="it">
+    <head>
+        <meta charset="UTF-8">
+        <title>Report Valutazione RAG</title>
+        <style>
+            body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+            h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+
+            /* Stats Dashboard */
+            .stats-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
+            .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+            .stat-card { padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #eee; }
+            .stat-title { font-size: 0.85em; color: #666; font-weight: bold; margin-bottom: 5px; }
+            .stat-value { font-size: 1.8em; font-weight: bold; }
+            .stat-count { font-size: 0.75em; color: #999; }
+
+            .stat-good { border-left: 4px solid #28a745; color: #28a745; }
+            .stat-warn { border-left: 4px solid #ffc107; color: #d39e00; }
+            .stat-bad { border-left: 4px solid #dc3545; color: #dc3545; }
+
+            /* Table Styles */
+            table { border-collapse: separate; border-spacing: 0; width: 100%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+            th { background-color: #343a40; color: white; padding: 15px; text-align: left; font-size: 0.9em; text-transform: uppercase; }
+            td { border-bottom: 1px solid #eee; padding: 15px; vertical-align: top; font-size: 0.95em; }
+            tr:last-child td { border-bottom: none; }
+            tr:hover { background-color: #f8f9fa; }
+
+            /* Badges */
+            .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; color: white; display: inline-block; margin-bottom: 5px;}
+            .badge-yes { background-color: #17a2b8; } /* Ciano per Summary */
+            .badge-no { background-color: #6c757d; }
+
+            .metric-item { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #eee; }
+            .metric-item:last-child { border-bottom: none; }
+            .metric-name { font-weight: bold; font-size: 0.9em; display: block; }
+            .metric-score { float: right; font-family: monospace; font-size: 1.1em; }
+            .metric-reason { display: block; font-size: 0.8em; color: #666; margin-top: 2px; font-style: italic; background: #fafafa; padding: 4px; border-left: 2px solid #ddd; }
+
+            .score-pass { color: #28a745; }
+            .score-fail { color: #dc3545; }
+
+            .response-text { white-space: pre-wrap; color: #444; max-height: 300px; overflow-y: auto; }
+            .query-text { font-weight: 600; color: #0056b3; margin-bottom: 8px; display: block; }
+
+            /* Custom Metrics */
+            .custom-metric-list { list-style: none; padding: 0; margin: 0; }
+            .custom-metric-list li { margin-bottom: 4px; font-size: 0.9em; }
+            .cm-key { font-weight: bold; color: #555; }
+        </style>
+    </head>
+    <body>
+        <h1>📊 Report Valutazione QA RAG</h1>
+    
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%">Query & Config</th>
+                    <th style="width: 35%">Risposta Generata</th>
+                    <th style="width: 25%">DeepEval Metrics</th>
+                    <th style="width: 15%">Custom Metrics</th>
+                </tr>
+            </thead>
+            <tbody>
+    
+            <tr>
+                <td>
+                    <span class="query-text">Cosa sono i servizi in Android?</span>
+                    <div><span class="badge badge-no">NO SUMMARY</span></div>
+                </td>
+                <td>
+                    <div class="response-text">**Servizi in Android**
+
+Un **service** è un componente di un’app Android che esegue operazioni a lunga durata, di solito in **background**, senza mostrare un’interfaccia utente (UI).  
+
+### Caratteristiche principali  
+- **Esecuzione indipendente**: può continuare a funzionare anche quando l’Activity che lo ha avviato è stata distrutta o l’app non è in primo piano.  
+- **Nessuna UI**: il service non ha layout né elementi visivi; se deve informare l’utente lo fa tramite **notifiche** (snackbar o barra di stato).  
+- **Dichiarazione nel Manifest**: per poter essere usato, il service deve essere inserito nel file *AndroidManifest.xml* con un elemento `&lt;service&gt;` all’interno di `&lt;application&gt;`.  
+
+### Tipi di service  
+1. **Service avviato (started)** – avviato da un componente (ad es. un’Activity) con `startService()`. Continua a girare finché non chiama `stopSelf()` o un altro componente chiama `stopService()`.  
+2. **Service collegato (bound)** – un componente si “collega” al service con `bindService()`. Il service rimane attivo finché esiste almeno un collegamento; permette al client di chiamare metodi del service come se fossero funzioni locali.  
+3. **Service avviato e collegato** – può essere sia avviato che collegato contemporaneamente, combinando i due comportamenti.  
+
+### Comunicazione  
+Android utilizza **Binder**, un meccanismo nativo del kernel Linux, per gestire la comunicazione tra processi. Grazie a Binder, un service può ricevere richieste da altri processi e rispondere come se fossero normali chiamate di funzione.  
+
+### Perché usarli  
+I service sono fondamentali per realizzare applicazioni efficienti che devono svolgere compiti lunghi (download, riproduzione audio, sincronizzazione dati, ecc.) senza bloccare l’interfaccia e senza consumare inutilmente le risorse del dispositivo.  
+
+In sintesi, un service è il “lavoratore” in background di Android: opera senza UI, può essere avviato o collegato, deve essere dichiarato nel Manifest e comunica con gli altri componenti tramite il sistema Binder.</div>
+                </td>
+                <td><em style='color:#999'>Nessuna metrica calcolata o errore.</em></td>
+                <td><ul class='custom-metric-list'><li><span class='cm-key'>F1:</span> 0.1588785046728972</li><li><span class='cm-key'>BLEU:</span> 0.040434363890798755</li><li><span class='cm-key'>ROUGE-L:</span> 0.20231213872832368</li></ul></td>
+            </tr>
+        
+            <tr>
+                <td>
+                    <span class="query-text">Cosa sono i servizi in Android?</span>
+                    <div><span class="badge badge-yes">CON SUMMARY</span></div>
+                </td>
+                <td>
+                    <div class="response-text">**Servizi in Android – spiegazione semplice**
+
+Un **service** è un componente di un’app Android che esegue operazioni a lunga durata, di solito in background, **senza mostrare un’interfaccia utente**.  
+
+### Caratteristiche principali  
+- **Nessuna UI**: il service non ha schermi o pulsanti; lavora “dietro le quinte”.  
+- **Continuità**: può continuare a girare anche quando l’attività (schermo) che lo ha avviato è stata chiusa o distrutta.  
+- **Dichiarazione**: per essere usato, il service deve essere inserito nel file *AndroidManifest.xml* con un elemento `&lt;service&gt;` all’interno di `&lt;application&gt;`.  
+
+### Tipi di service  
+1. **Service avviato (started)**  
+   - Viene lanciato da un componente (ad es. un’Activity) con `startService()`.  
+   - Continua a funzionare finché non chiama `stopSelf()` o un altro componente chiama `stopService()`.  
+   - Ideale per compiti che devono durare indipendentemente dall’interfaccia, come la riproduzione musicale.  
+
+2. **Service collegato (bound)**  
+   - Un componente si “collega” al service con `bindService()`.  
+   - Il service rimane attivo finché almeno un client è collegato.  
+   - Viene usato quando è necessario scambiare dati o chiamare metodi del service (Android usa il meccanismo **Binder** per questa comunicazione).  
+
+3. **Service avviato e collegato**  
+   - Può essere sia avviato che avere client collegati contemporaneamente.  
+
+### Perché usare un service per la musica?  
+Nel tuo caso (app di riproduzione musicale) il thread Java semplice viene interrotto perché Android chiude il processo quando l’app non è in primo piano.  
+Un **service avviato** (meglio ancora un *foreground service*, cioè un service avviato che mostra una notifica permanente nella barra di stato) rimane attivo anche se l’utente chiude l’app o spegne lo schermo, garantendo che la musica continui a suonare.
+
+### Notifiche  
+- Un service può informare l’utente usando **notifiche**:  
+  - *Snackbar* (breve messaggio nella finestra corrente).  
+  - *Notifica nella barra di stato* (icona + messaggio persistente).  
+
+### Riepilogo  
+- **Cos’è**: componente senza UI per operazioni lunghe in background.  
+- **Come si dichiara**: `&lt;service&gt;` nel manifest.  
+- **Tipi**: avviato, collegato, o entrambi.  
+- **Uso tipico**: attività che devono continuare anche quando l’app non è visibile, come la riproduzione musicale, il download di file, il monitoraggio della posizione, ecc.  
+
+Per la tua app musicale, crea un **service avviato** (preferibilmente in modalità foreground) che gestisce la riproduzione; così la musica non si interromperà quando l’app viene chiusa o lo schermo si spegne.</div>
+                </td>
+                <td><em style='color:#999'>Nessuna metrica calcolata o errore.</em></td>
+                <td><ul class='custom-metric-list'><li><span class='cm-key'>F1:</span> 0.12575574365175332</li><li><span class='cm-key'>BLEU:</span> 0.02855617615832479</li><li><span class='cm-key'>ROUGE-L:</span> 0.15274463007159905</li></ul></td>
+            </tr>
+        
+            <tr>
+                <td>
+                    <span class="query-text">Cos&#x27;è il pattern Observer in ingegneria del software?</span>
+                    <div><span class="badge badge-no">NO SUMMARY</span></div>
+                </td>
+                <td>
+                    <div class="response-text">**Il pattern Observer (osservatore)** è un modello di progettazione che permette a più oggetti di “ascoltare” le variazioni di un altro oggetto, senza che quest’ultimo debba conoscere i dettagli di chi lo osserva.
+
+### Come funziona
+1. **Subject (o modello)** – è l’oggetto che contiene i dati e lo stato dell’applicazione.  
+   - Mantiene una **lista di observer** (gli oggetti interessati).  
+   - Fornisce metodi per **registrare** (aggiungere) e **deregistrare** (rimuovere) gli observer.  
+2. **Observer** – è qualsiasi oggetto che vuole essere avvisato quando il subject cambia.  
+   - Deve implementare un **metodo di callback** (un’interfaccia) che il subject chiama per notificare il cambiamento.  
+
+Quando il subject modifica il proprio stato, **notifica automaticamente tutti gli observer** presenti nella lista, chiamando il loro metodo di callback. In questo modo le viste o altri componenti possono aggiornarsi in tempo reale.
+
+### Caratteristiche principali
+- **Separazione delle responsabilità**: il subject si occupa solo dei dati; gli observer si occupano di reagire ai cambiamenti (ad esempio aggiornare l’interfaccia utente).  
+- **Bassa dipendenza dal tipo concreto**: il subject non conosce la classe specifica degli observer, ma solo l’interfaccia di callback.  
+- **Registrazione dinamica**: gli observer possono essere aggiunti o rimossi in qualsiasi momento.  
+- **Accoppiamento**: riduce l’accoppiamento tra subject e observer concreti, ma aumenta l’accoppiamento tra gli observer e il modello, poiché tutti devono rispettare la stessa interfaccia di notifica.  
+
+### Dove si usa
+Il pattern Observer è alla base di architetture come **MVC (Model‑View‑Controller)**: il *Model* è il subject, le *View* sono gli observer. Quando l’utente interagisce con la vista, il controller modifica il modello; il meccanismo di osservazione provvede a propagare automaticamente le modifiche alle viste interessate.
+
+In sintesi, l’Observer è un modo semplice ed efficace per mantenere sincronizzati più componenti di un’applicazione, facendo sì che tutti reagiscano automaticamente ai cambiamenti di stato senza che il soggetto debba conoscere i dettagli di chi lo osserva.</div>
+                </td>
+                <td><em style='color:#999'>Nessuna metrica calcolata o errore.</em></td>
+                <td><ul class='custom-metric-list'><li><span class='cm-key'>F1:</span> 0.13292117465224113</li><li><span class='cm-key'>BLEU:</span> 0.01570412953460141</li><li><span class='cm-key'>ROUGE-L:</span> 0.11898016997167139</li></ul></td>
+            </tr>
+        
+            <tr>
+                <td>
+                    <span class="query-text">Cos&#x27;è il pattern Observer in ingegneria del software?</span>
+                    <div><span class="badge badge-yes">CON SUMMARY</span></div>
+                </td>
+                <td>
+                    <div class="response-text">**Il pattern Observer (osservatore)** è un modello comportamentale che permette a un oggetto — detto **subject** o **modello** — di tenere traccia di una lista di altri oggetti — gli **observer** o **osservatori** — che desiderano essere avvisati ogni volta che lo stato del subject cambia.
+
+### Come funziona
+1. **Registrazione** – gli observer si iscrivono al subject chiamando un metodo `addObserver` (o simile).  
+2. **Deregistrazione** – possono anche togliersi dalla lista con `removeObserver`.  
+3. **Notifica** – quando il subject subisce una modifica (ad esempio nuovi dati meteo), chiama automaticamente un metodo di callback definito dall’interfaccia degli observer (spesso `update`).  
+4. **Aggiornamento** – ogni observer riceve la notifica e reagisce a modo suo (aggiorna un display, ricalcola statistiche, ecc.).
+
+### Caratteristiche principali
+- **Disaccoppiamento**: il subject **non conosce** la classe concreta degli observer; interagisce solo tramite un’interfaccia comune. Questo rende il codice più modulare e riutilizzabile.  
+- **Scalabilità**: è facile aggiungere o rimuovere observer senza modificare il subject.  
+- **Automatismo**: gli aggiornamenti avvengono in modo automatico, così tutti gli observer rimangono sincronizzati con lo stato corrente.  
+- **Leggera dipendenza**: sebbene il subject non sappia chi sono gli observer, esiste comunque una dipendenza verso l’interfaccia di callback, che può introdurre un piccolo accoppiamento.
+
+### Quando usarlo (esempio pratico)
+Immagina una stazione meteo con un oggetto `DatiMeteo` che riceve i valori dai sensori. Hai tre display diversi:
+
+- **DisplayTemperatura**
+- **DisplayStatistiche**
+- **DisplayPrevisioni**
+
+Tutti devono aggiornarsi ogni volta che arrivano nuovi dati, ma `DatiMeteo` non deve conoscere i dettagli di ciascun display. Applicando l’Observer:
+
+1. `DatiMeteo` è il **subject**; mantiene una lista di observer.  
+2. Ogni display implementa l’interfaccia `Observer` con il metodo `update(DatiMeteo dati)`.  
+3. I display si registrano con `DatiMeteo.addObserver(this)`.  
+4. Quando i sensori forniscono nuovi valori, `DatiMeteo` chiama `notifyObservers()`, che invoca `update` su tutti i display.  
+
+In questo modo i display si aggiornano automaticamente e il codice rimane pulito e facilmente estendibile (puoi aggiungere nuovi tipi di display senza toccare `DatiMeteo`).  
+
+---
+
+**In sintesi**, il pattern Observer è un meccanismo di comunicazione “pubblica‑sottoscrivi” che consente a un oggetto di informare più altri oggetti di un cambiamento, mantenendo i componenti poco accoppiati e favorendo la modularità del sistema.</div>
+                </td>
+                <td><em style='color:#999'>Nessuna metrica calcolata o errore.</em></td>
+                <td><ul class='custom-metric-list'><li><span class='cm-key'>F1:</span> 0.11221945137157106</li><li><span class='cm-key'>BLEU:</span> 0.015779437095237967</li><li><span class='cm-key'>ROUGE-L:</span> 0.11704834605597964</li></ul></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </body>
+    </html>
+    
