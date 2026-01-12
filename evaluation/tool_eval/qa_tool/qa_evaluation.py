@@ -48,19 +48,15 @@ import json
 import datetime
 
 class DateTimeEncoder(json.JSONEncoder):
-    """Gestisce oggetti non serializzabili (come datetime o oggetti custom) convertendoli in stringa."""
     def default(self, obj):
         if isinstance(obj, (datetime.date, datetime.datetime)):
             return obj.isoformat()
         try:
-            # Prova a convertire oggetti custom (es. risultati DeepEval) in dict o str
             return obj.__dict__
         except AttributeError:
             return str(obj)
-        return super().default(obj)
 
 def save_checkpoint(results, filename="checkpoint_results.json"):
-    """Salva i risultati parziali su file."""
     try:
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(results, f, ensure_ascii=False, indent=4, cls=DateTimeEncoder)
@@ -77,7 +73,6 @@ class RateLimitedOllamaModel(OllamaModel):
         async with self.semaphore:
             client = ollama.AsyncClient(host=self.base_url)
 
-            # Parametri per forzare il JSON se richiesto
             kwargs = {}
             if schema:
                 kwargs["format"] = "json"

@@ -3,901 +3,2906 @@
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Router Test Report</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h2 { color: #333; }
-            h3 { color: #555; margin-bottom: 5px; }
-            table { border-collapse: collapse; width: 80%; margin-bottom: 20px; }
-            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; }
-            .success { color: green; font-weight: bold; }
-            .failure { color: red; font-weight: bold; }
-        </style>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Router Evaluation Report</title>
+        
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --success-color: #28a745;
+            --failure-color: #dc3545;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --header-text: #555555;
+            --border-color: #e0e0e0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max_width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2, h3, h4 {
+            color: var(--header-text);
+            margin-top: 0;
+        }
+        h2 { margin-bottom: 15px; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; display: inline-block; }
+
+        /* Dashboard Cards */
+        .dashboard {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 20px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+        .card-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        .card-label {
+            font-size: 0.9em;
+            text-transform: uppercase;
+            color: #777;
+            letter-spacing: 1px;
+        }
+        .card-success .card-value { color: var(--success-color); }
+        .card-fail .card-value { color: var(--failure-color); }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #444;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f1f1f1; }
+
+        /* Badges & Status */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+        }
+        .bg-success { background-color: var(--success-color); }
+        .bg-failure { background-color: var(--failure-color); }
+        .bg-tool { background-color: #6c757d; }
+
+        .status-success { color: var(--success-color); font-weight: bold; }
+        .status-failure { color: var(--failure-color); font-weight: bold; }
+
+        /* Query Section Blocks */
+        .query-block {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--primary-color);
+        }
+        .query-block.failed-block { border-left-color: var(--failure-color); }
+
+        .query-header {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .query-text { font-style: italic; color: #555; font-weight: 500; }
+
+        .result-detail {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            height: 8px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            background-color: var(--success-color);
+        }
+
+        /* Hyperparameters Box */
+        .params-box {
+            background: #eef2f5;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #dee2e6;
+        }
+        .param-item strong { color: #555; }
+    </style>
+    
     </head>
     <body>
-        <h2>Router Test Report</h2>
-        <h3>Summary</h3>
-        <p>Total Tests: 51</p>
-        <p>Total Successes: 47</p>
-        <p>Overall Success Rate: 92.16%</p>
-        <hr>
-    <h3>Aggregated Metrics per Tool</h3><table><tr><th>Tool</th><th>Total Tests</th><th>Successes</th><th>Success Rate</th></tr><tr><td>QA_TOOL</td><td>17</td><td>14</td><td>82.35%</td></tr><tr><td>FLASHCARD_TOOL</td><td>18</td><td>17</td><td>94.44%</td></tr><tr><td>QUIZ_TOOL</td><td>16</td><td>16</td><td>100.00%</td></tr></table><hr>
-    <h3>Hyperparameters</h3>
-    <ul>
-        <li>Model: gpt-oss:20b-cloud</li>
-        <li>Temperature: 0.1</li>
-        <li>Top-p: 0.9</li>
-        <li>Num Context Tokens: 4096</li>
-        <li>Max Tokens: 300</li>
-        <li>Repeat Penalty: 1.1</li>
-        <li>Toon Format Options: False, True</li>
-    </ul>
-    <hr><h3>Query: Spiegami in modo semplice il funzionamento del protocollo MQTT.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
+        <div class="container">
+            <h1>Router Evaluation Report</h1>
+
+            <div class="dashboard">
+                <div class="card">
+                    <div class="card-value">51</div>
+                    <div class="card-label">Total Tests</div>
+                </div>
+                <div class="card card-success">
+                    <div class="card-value">47</div>
+                    <div class="card-label">Successes</div>
+                </div>
+                <div class="card card-success">
+                    <div class="card-value">92.2%</div>
+                    <div class="card-label">Success Rate</div>
+                </div>
+            </div>
+
+            <h2>Performance by Tool</h2>
             <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
-            
+                <thead>
+                    <tr>
+                        <th width="25%">Tool Name</th>
+                        <th width="20%">Total</th>
+                        <th width="20%">Success</th>
+                        <th width="35%">Success Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+    
+                    <tr>
+                        <td><span class="badge bg-tool">QA_TOOL</span></td>
+                        <td>17</td>
+                        <td>14</td>
+                        <td>
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: 82.35294117647058%"></div>
+                            </div>
+                            82.4%
+                        </td>
+                    </tr>
+        
+                    <tr>
+                        <td><span class="badge bg-tool">FLASHCARD_TOOL</span></td>
+                        <td>18</td>
+                        <td>17</td>
+                        <td>
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: 94.44444444444444%"></div>
+                            </div>
+                            94.4%
+                        </td>
+                    </tr>
+        
+                    <tr>
+                        <td><span class="badge bg-tool">QUIZ_TOOL</span></td>
+                        <td>16</td>
+                        <td>16</td>
+                        <td>
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: 100.0%"></div>
+                            </div>
+                            100.0%
+                        </td>
+                    </tr>
+        
+                </tbody>
+            </table>
+
+            <h2>Configuration</h2>
+            <div class="params-box">
+                <div class="param-item"><strong>Model:</strong> gpt-oss:20b-cloud</div>
+                <div class="param-item"><strong>Temperature:</strong> 0.1</div>
+                <div class="param-item"><strong>Top-p:</strong> 0.9</div>
+                <div class="param-item"><strong>Max Tokens:</strong> 300</div>
+                <div class="param-item"><strong>Toon Formats:</strong> False, True</div>
+            </div>
+
+            <h2>Detailed Test Cases</h2>
+    
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Spiegami in modo semplice il funzionamento del protocollo MQTT."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Generami 5 flashcard sul capitolo del Fog Computing.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Generami 5 flashcard sul capitolo del Fog Computing."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Fammi un quiz a risposta multipla sul machine learning supervisionato.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Fammi un quiz a risposta multipla sul machine learning supervisionato."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Make flashcards about the OSI model.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Make flashcards about the OSI model."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Qual è la differenza tra edge e cloud computing?</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Qual è la differenza tra edge e cloud computing?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Explain how SSL/TLS works in simple terms.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Explain how SSL/TLS works in simple terms."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Create 10 flashcards to study Kubernetes architecture.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Create 10 flashcards to study Kubernetes architecture."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Generate a multiple-choice quiz about operating systems.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Generate a multiple-choice quiz about operating systems."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Explícame la diferencia entre inteligencia artificial y aprendizaje automático.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Explícame la diferencia entre inteligencia artificial y aprendizaje automático."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Crea tarjetas de estudio sobre el modelo TCP/IP.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Crea tarjetas de estudio sobre el modelo TCP/IP."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Genérame un cuestionario de 5 preguntas sobre seguridad informática.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Genérame un cuestionario de 5 preguntas sobre seguridad informática."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Explique-moi le fonctionnement du protocole HTTPS.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Explique-moi le fonctionnement du protocole HTTPS."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Crée des flashcards pour réviser le modèle client-serveur.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Crée des flashcards pour réviser le modèle client-serveur."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Génère un quiz sur les bases de données relationnelles.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Génère un quiz sur les bases de données relationnelles."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Erkläre mir den Unterschied zwischen RAM und ROM.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Erkläre mir den Unterschied zwischen RAM und ROM."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Erstelle Lernkarten über Netzwerkschichten.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Erstelle Lernkarten über Netzwerkschichten."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Erzeuge ein Quiz über neuronale Netze.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Erzeuge ein Quiz über neuronale Netze."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Explícame in English sobre TCP/IP, please.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Explícame in English sobre TCP/IP, please."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Crea flashcards sobre Kubernetes in italiano.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Crea flashcards sobre Kubernetes in italiano."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Make un pequeño quiz sobre cloud computing.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Make un pequeño quiz sobre cloud computing."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Mi fai un riassunto about SSL/TLS?</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Mi fai un riassunto about SSL/TLS?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Flashcards?</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Flashcards?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Quiz!</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Quiz!"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Explain?</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Explain?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Fashcards sobre AI plz</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Fashcards sobre AI plz"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Qwiz about networking</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Qwiz about networking"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Expalin how HTTP works</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Expalin how HTTP works"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Mi fai un riassunto del capitolo sulla sicurezza di rete? Magari anche due domande per ripassare.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='failure'>Failure</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block failed-block">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Mi fai un riassunto del capitolo sulla sicurezza di rete? Magari anche due domande per ripassare."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-failure">❌ Failure</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>0.0</td>
                     <td>1.0</td>
-                    <td class="failure">❌</td>
-                    <td>The actual and expected outputs are different.</td>
+                    <td style="text-align:center;">❌</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are different.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Vorrei capire meglio Docker. Puoi anche generare qualche domanda se serve.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='failure'>Failure</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block failed-block">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Vorrei capire meglio Docker. Puoi anche generare qualche domanda se serve."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-failure">❌ Failure</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>0.0</td>
                     <td>1.0</td>
-                    <td class="failure">❌</td>
-                    <td>The actual and expected outputs are different.</td>
+                    <td style="text-align:center;">❌</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are different.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Spiegami cos'è il machine learning e crea poi delle flashcard.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Spiegami cos'è il machine learning e crea poi delle flashcard."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Come funziona Kafka? E dopo fammi un piccolo quiz.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Come funziona Kafka? E dopo fammi un piccolo quiz."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Bro plz make me some flashcards about cloud stuff thx.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Bro plz make me some flashcards about cloud stuff thx."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Ehi senti, mi fai un quiz easy sul deep learning?</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Ehi senti, mi fai un quiz easy sul deep learning?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Hey could u, like, explain 5G architecture but keep it simple?</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Hey could u, like, explain 5G architecture but keep it simple?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Oye, ¿me haces ‘unas tarjetitas’ para estudiar redes?</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Oye, ¿me haces ‘unas tarjetitas’ para estudiar redes?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Prima spiegami cosa fa un load balancer e poi crea qualche flashcard per ricordarlo.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Prima spiegami cosa fa un load balancer e poi crea qualche flashcard per ricordarlo."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Dame un resumen de blockchain y tal vez unas preguntas.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='failure'>Failure</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block failed-block">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Dame un resumen de blockchain y tal vez unas preguntas."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-failure">❌ Failure</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>0.0</td>
                     <td>1.0</td>
-                    <td class="failure">❌</td>
-                    <td>The actual and expected outputs are different.</td>
+                    <td style="text-align:center;">❌</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are different.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Parlami del modello OSI e fammi anche un quiz se puoi.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Parlami del modello OSI e fammi anche un quiz se puoi."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Kannst du mir die wichtigsten Punkte von TCP erklären und danach ein paar Lernkarten machen?</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Kannst du mir die wichtigsten Punkte von TCP erklären und danach ein paar Lernkarten machen?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Puoi expalin me la diff tra RAM e cache?</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Puoi expalin me la diff tra RAM e cache?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Flashcards bitte über cybersec pls.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Flashcards bitte über cybersec pls."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Quiz sobre sistema operativos, porfavo? (sí, mal escrito).</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Quiz sobre sistema operativos, porfavo? (sí, mal escrito)."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Fai un explayn su AI, grazie.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Fai un explayn su AI, grazie."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Vorrei delle domande per capire se ho capito gli algoritmi di sorting.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Vorrei delle domande per capire se ho capito gli algoritmi di sorting."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Mi servono appunti facili da ripassare sul serverless.</h3><p><strong>Expected Output:</strong> QA_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Mi servono appunti facili da ripassare sul serverless."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QA_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Ho bisogno di un modo rapido per memorizzare il modello TCP/IP.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QA_TOOL</p><p><strong>Result:</strong> <span class='failure'>Failure</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block failed-block">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Ho bisogno di un modo rapido per memorizzare il modello TCP/IP."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-failure">❌ Failure</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QA_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>0.0</td>
                     <td>1.0</td>
-                    <td class="failure">❌</td>
-                    <td>The actual and expected outputs are different.</td>
+                    <td style="text-align:center;">❌</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are different.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Give me something to test if I truly understand microservices.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Give me something to test if I truly understand microservices."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Scrivimi un elenco di 5 domande e risposte sulla sicurezza web.</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Scrivimi un elenco di 5 domande e risposte sulla sicurezza web."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Fammi 10 domande senza risposta sul cloud computing.</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Fammi 10 domande senza risposta sul cloud computing."</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Posso avere un set di coppie domanda-risposta sul TCP?</h3><p><strong>Expected Output:</strong> FLASHCARD_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> FLASHCARD_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Posso avere un set di coppie domanda-risposta sul TCP?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">FLASHCARD_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> FLASHCARD_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr><h3>Query: Mi fai domande sì/no per verificare che ho capito il machine learning?</h3><p><strong>Expected Output:</strong> QUIZ_TOOL</p><h4>Toon format = False</h4><p><strong>Actual Output:</strong> QUIZ_TOOL</p><p><strong>Result:</strong> <span class='success'>Success</span></p>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Score</th>
-                    <th>Threshold</th>
-                    <th>Success</th>
-                    <th>Details</th>
-                </tr>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
             
+            </div>
+        
+            <div class="query-block ">
+                <div class="query-header">
+                    <div>
+                        <span style="font-weight:bold; color:#333;">Query:</span> 
+                        <span class="query-text">"Mi fai domande sì/no per verificare che ho capito il machine learning?"</span>
+                    </div>
+                    <div>
+                        <span style="font-size:0.85em; color:#777; margin-right:5px;">EXPECTED:</span>
+                        <span class="badge bg-tool">QUIZ_TOOL</span>
+                    </div>
+                </div>
+                
+                <div class="result-detail">
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <div>
+                             <span class="badge bg-success">✅ Success</span>
+                             <span style="margin-left: 10px; font-weight:bold; color:#555;">Tone Format: False</span>
+                        </div>
+                    </div>
+
+                    <p style="margin: 5px 0;"><strong>Actual Output:</strong> QUIZ_TOOL</p>
+
+                    <table style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th width="20%">Metric</th>
+                                <th width="10%">Score</th>
+                                <th width="10%">Threshold</th>
+                                <th width="10%">Pass</th>
+                                <th width="50%">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
                 <tr>
                     <td>Exact Match</td>
                     <td>1.0</td>
                     <td>1.0</td>
-                    <td class="success">✅</td>
-                    <td>The actual and expected outputs are exact matches.</td>
+                    <td style="text-align:center;">✅</td>
+                    <td style="font-size:0.9em; color:#666;">The actual and expected outputs are exact matches.</td>
                 </tr>
-                </table><p><strong>Conversational:</strong> False | <strong>Multimodal:</strong> False</p><hr></body></html>
+                
+                        </tbody>
+                    </table>
+
+                    <div style="font-size:0.85em; color:#888; margin-top:5px;">
+                        Conversational: False | Multimodal: False
+                    </div>
+                </div>
+            
+            </div>
+        
+        </div> </body>
+    </html>
+    
