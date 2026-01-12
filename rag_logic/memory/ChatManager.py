@@ -14,7 +14,6 @@ from persistence.long_term_memory.mongo.QuizRepository import MongoQuizRepositor
 from rag_logic.memory.DocumentManager import DocumentManager
 from rag_logic.memory.FlashcardManger import FlashcardManager
 from rag_logic.memory.QuizManager import QuizManager
-from rag_logic.utils import  detect_language_from_query
 
 from rag_logic.agents.AgentState import AgentState
 from rag_logic.agents.PlannerAgent import PlannerAgent
@@ -130,7 +129,10 @@ class ChatManager:
 
             response_payload = {
                 "ai_response": final_state.answer if final_state.answer else "Fatto.",
-                "docs_source": final_state.explanation if final_state.explanation else "Nessuna spiegazione."
+                "docs_source": final_state.explanation if final_state.explanation else [],
+                "history": final_state.history,
+                "summary": final_state.summary,
+                "type": final_state.history[-1]
             }
 
             if final_state.summary:

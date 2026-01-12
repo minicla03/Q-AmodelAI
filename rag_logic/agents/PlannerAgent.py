@@ -39,7 +39,7 @@ class PlannerAgent:
             3. QUIZ_TOOL → Generates quiz from the content.
             
             Guidelines:
-            - Use the language of the user's query if detectable, otherwise fallback to {language_hint}.
+            - Use the language of the user's query if detectable, otherwise fallback.
             - If the query asks for explanations, summaries, or answers → QA_TOOL.
             - If the query asks to generate flashcards → FLASHCARD_TOOL.
             - If the query asks to generate quiz questions → QUIZ_TOOL.
@@ -145,6 +145,7 @@ class PlannerAgent:
 
             if "docs" in result:
                 state.docs.extend(result["docs"])
+                state.explanation = result["docs_source"]
             if "ai_response" in result:
                 state.answer = result["ai_response"]
                 state.explanation = result["docs_source"]

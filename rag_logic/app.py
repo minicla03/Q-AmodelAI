@@ -79,7 +79,7 @@ def select_existing_notebook(nb_manager, user_id):
 
 def main():
     print("==========================================")
-    print("      RAG SYSTEM CLI INTERFACE v2         ")
+    print("      RAG SYSTEM CLI INTERFACE          ")
     print("==========================================\n")
 
     if not check_db_connections():
@@ -161,17 +161,13 @@ def main():
                 # === COMANDO EXIT ===
                 if user_input.lower() in ["/exit", "exit", "quit"]:
                     print("Salvataggio stato e chiusura...")
-                    manager.close()  # Questo ora salva flashcard/quiz in RAM su DB
+                    manager.close()  # Questo salva flashcard/quiz in RAM su DB
                     print("Sessione terminata.")
                     break
 
                 # === COMANDO SAVE (NUOVO) ===
                 elif user_input.lower() == "/save":
-                    # Assumiamo che ChatManager esponga un metodo save o accediamo ai manager interni
-                    # Opzione A (se hai implementato save_all in ChatManager):
-                    # manager.save_all()
 
-                    # Opzione B (Accesso diretto ai manager interni se pubblici):
                     saved_fc = manager.flashcard_manager.persist_buffer()
                     saved_qz = manager.quiz_manager.persist_buffer()
                     print(f" >> Salvataggio completato: {saved_fc} Flashcards, {saved_qz} Quiz salvati su DB.")
@@ -246,7 +242,7 @@ def main():
                         ai_text = response.get("ai_response", "Nessuna risposta.")
                         print(f"\n(AI) > {ai_text}")
 
-                        if response.get("type") == "QA" and "docs_source" in response:
+                        if response.get("type") == "QA_TOOL" and "docs_source" in response:
                             explanation = response.get("docs_source")
                             print(f"[Explanation] \n Sources used: {len(explanation)}")
                             for result in explanation:
