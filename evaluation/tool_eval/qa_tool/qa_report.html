@@ -1,0 +1,1694 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>QA Tool Evaluation Report</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50; /* Dark Slate Blue */
+            --accent-color: #3498db;  /* Blue */
+            --bg-color: #f4f7f6;      /* Light Gray */
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --fail-bg: #f8d7da;
+            --fail-text: #721c24;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            font-size: 2.2rem;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-top: 40px;
+            border-left: 5px solid var(--accent-color);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+
+        /* Table Styling */
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Metric Formatting */
+        .metric-score {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Test Case Cards */
+        .case-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .case-details {
+            margin-bottom: 20px;
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .case-details p {
+            margin: 8px 0;
+        }
+
+        .label-bold {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Status badges inside table */
+        .status-true {
+            background-color: var(--success-bg);
+            color: var(--success-text);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .status-false {
+            background-color: var(--fail-bg);
+            color: var(--fail-text);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .reason-cell {
+            font-size: 0.9rem;
+            color: #555;
+            max-width: 400px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QA Tool Evaluation Report</h1>
+
+        <h2>Aggregated Metrics</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Configuration</th>
+                        <th>F1</th>
+                        <th>BLEU</th>
+                        <th>ROUGE-L</th>
+                        
+                        <th>Answer Relevancy</th>
+                        
+                        <th>Contextual Precision</th>
+                        
+                        <th>Contextual Recall</th>
+                        
+                        <th>Contextual Relevancy</th>
+                        
+                        <th>Faithfulness</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>Con Riassunto</strong></td>
+                        <td class="metric-score">0.12</td>
+                        <td class="metric-score">0.03</td>
+                        <td class="metric-score">0.12</td>
+                        
+                        <td class="metric-score">0.99</td>
+                        
+                        <td class="metric-score">0.95</td>
+                        
+                        <td class="metric-score">0.62</td>
+                        
+                        <td class="metric-score">0.51</td>
+                        
+                        <td class="metric-score">1.00</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>Senza Riassunto</strong></td>
+                        <td class="metric-score">0.13</td>
+                        <td class="metric-score">0.03</td>
+                        <td class="metric-score">0.15</td>
+                        
+                        <td class="metric-score">1.00</td>
+                        
+                        <td class="metric-score">0.91</td>
+                        
+                        <td class="metric-score">0.52</td>
+                        
+                        <td class="metric-score">0.44</td>
+                        
+                        <td class="metric-score">1.00</td>
+                        
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Test Case Details</h2>
+        
+        <div class="case-card">
+            <h3>Case 1 &mdash; Senza Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> Cosa sono i servizi in Android?</p>
+                <p><span class="label-bold">Answer:</span> **Servizio (Service) in Android**
+
+Un *service* è un componente di un’app Android che esegue operazioni a lunga durata, di solito in background, **senza mostrare un’interfaccia utente**.  
+
+### Caratteristiche principali  
+- **Esecuzione indipendente**: può continuare a funzionare anche quando l’activity che lo ha avviato è stata distrutta o l’app non è in primo piano.  
+- **Tipi di avvio**  
+  - **Service avviato**: avviato da un componente (activity, broadcast receiver, ecc.) con `startService()`. continua a girare finché non chiama `stopSelf()` o un altro componente chiama `stopService()`.  
+  - **Service collegato (bound)**: un componente si “lega” al service con `bindService()`. Il service rimane attivo finché esiste almeno un client collegato; permette di scambiare dati e chiamare metodi del service.  
+  - **Service sia avviato che collegato**: può essere usato in entrambe le modalità contemporaneamente.  
+- **Dichiarazione nel Manifest**: ogni service deve essere inserito nel file `AndroidManifest.xml` come elemento `<service>` figlio di `<application>`.  
+- **Comunicazione inter‑processo**: Android usa il meccanismo nativo **Binder** per far comunicare il service con altri processi, consentendo richieste e risposte come normali chiamate di funzione.  
+- **Notifiche all’utente**: mentre è in esecuzione, il service può informare l’utente tramite:
+  - **Snackbar** (messaggio temporaneo nella finestra corrente)  
+  - **Notifica nella barra di stato** (icona + messaggio persistente).  
+
+### Perché usarli  
+I service permettono di svolgere compiti lunghi (download, riproduzione audio, sincronizzazioni, ecc.) senza bloccare l’interfaccia dell’app, migliorando l’esperienza utente e gestendo meglio le risorse del dispositivo.  
+
+In sintesi, un service è il “lavoratore” di background di Android: opera senza UI, può essere avviato o collegato, deve essere dichiarato nel manifest e utilizza Binder per la comunicazione, potendo anche inviare notifiche all’utente.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the answer completely and accurately explained Android services without any irrelevant content.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the first three nodes (rank 1‑3) are clearly relevant – node 1 “directly defines a service…”, node 2 “services must be declared in the manifest…”, node 3 “services run in background and can notify the user” – while the two irrelevant nodes appear later (rank 4 and 5). This perfect ordering yields a contextual‑precision of 1.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.75</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.75 because node(s) in retrieval context (Node 1 and Node 2) provide evidence for sentences 1‑3 of the expected output, but none of the nodes mention the lifecycle callbacks onCreate(), onStartCommand(), onBind() or onDestroy() needed for sentence 4.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.52</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.52 because the context includes a relevant definition of Android services ("Un service in Android è un componente applicativo che esegue operazioni a lunga esecuzione, solitamente in background, senza fornire un'interfaccia utente (UI)."), but it is surrounded by many unrelated statements—e.g., lifecycle events, Activity details, Binder IPC, and Java bytecode—as noted in the irrelevancy reasons, limiting overall relevance.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions; the actual output aligns perfectly with the retrieval context.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 2 &mdash; Con Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> Cosa sono i servizi in Android?</p>
+                <p><span class="label-bold">Answer:</span> **I servizi in Android**
+
+Un **service** è un componente dell’applicazione che esegue operazioni a lunga durata in background, senza mostrare un’interfaccia utente (UI).  
+Può continuare a funzionare anche quando l’attività che lo ha avviato è stata chiusa o il dispositivo è andato in standby.
+
+---
+
+### Tipi di service  
+
+1. **Service avviato (started)**  
+   - Viene lanciato da un componente (ad es. un’Activity) con `startService()`.  
+   - Esegue un compito (es. scaricare un file, riprodurre musica) finché non chiama `stopSelf()` o un altro componente chiama `stopService()`.  
+
+2. **Service collegato (bound)**  
+   - Viene “legato” a un componente con `bindService()`.  
+   - Il componente può interagire con il service tramite un’interfaccia (es. chiamare metodi, ricevere dati).  
+   - Il service rimane attivo finché almeno un client è collegato; quando tutti si scollegano, il service viene distrutto.  
+
+3. **Service sia avviato che collegato**  
+   - Può essere avviato per svolgere un lavoro continuo e, allo stesso tempo, consentire a più componenti di collegarsi per controllarne lo stato.
+
+---
+
+### Come si dichiara un service  
+
+Tutti i service devono essere indicati nel file **AndroidManifest.xml**:
+
+```xml
+<application ... >
+    <service android:name=".MyMusicService"
+             android:exported="false"/>
+</application>
+```
+
+L’elemento `<service>` è figlio di `<application>` e specifica il nome della classe che implementa il service.
+
+---
+
+### Perché usarli (es. riproduzione musicale)
+
+- **Persistenza**: un service continua a girare anche se l’utente chiude l’app o spegne lo schermo, evitando che la musica si interrompa.
+- **Gestione delle risorse**: Android gestisce il ciclo di vita dei service in modo da non consumare inutilmente batteria o memoria.
+- **Notifiche**: mentre il service è in esecuzione può informare l’utente tramite notifiche nella barra di stato o snackbar, così l’utente sa che la riproduzione è attiva.
+
+---
+
+### Concetti chiave da ricordare  
+
+- **Nessuna UI**: il service non ha layout né elementi visivi; per interagire con l’utente si usano notifiche o si comunica con le Activity.  
+- **Ciclo di vita**: il sistema crea, avvia, mette in pausa e distrugge il service secondo le chiamate `onCreate()`, `onStartCommand()`, `onBind()`, `onDestroy()`.  
+- **Binder**: Android usa il meccanismo **Binder** per la comunicazione inter‑processo; è il modo con cui un client chiama metodi del service come fossero normali funzioni.  
+
+---
+
+### In sintesi  
+
+Un **service** è il componente Android pensato per eseguire compiti lunghi o continui in background, senza UI, dichiarato nel manifest e disponibile in tre modalità (avviato, collegato o entrambi). È la soluzione ideale per far continuare la riproduzione musicale anche quando l’app non è in primo piano.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the response directly answered the question about Android services without any irrelevant content.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the relevant nodes are ranked at the top (rank 1: "Il documento descrive chiaramente un service...", rank 2: "Qui si parla della dichiarazione dei service...", rank 3: "Il testo menziona come "un servizio è in esecuzione"..."), and the irrelevant nodes appear only after them (rank 4: "Questo documento tratta di Binder...", rank 5: "Il contenuto è incentrato sulle Activity..."). This perfect ordering leaves no room for a higher score.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.75</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.75 because node 1 in retrieval context supports sentences 1‑3 of the expected output (background operation without UI, continuation when the app isn’t visible, and the Started/Bound/Foreground service types), but none of the nodes mention the lifecycle callbacks onCreate(), onStartCommand(), onBind() or onDestroy() required for sentence 4.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.45</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.45 because the retrieval context includes useful service definitions such as "Un service in Android è un componente applicativo che esegue operazioni a lunga esecuzione, solitamente in background, senza fornire un'interfaccia utente (UI)." and "Un'applicazione può avviare un service anche se non è in primo piano...", but it is also cluttered with many unrelated statements like "The statement refers to fragment lifecycle events ('onAttach', 'onCreateView', 'onActivityCreated') which are unrelated to the definition of Android services" and "The focus is on *Views* within an *Activity* ('Ogni Activity è formata da una serie di View…'), which does not address Android *services*." This mix of relevant and irrelevant content yields a moderate relevance score.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions, indicating the actual output perfectly aligns with the retrieval context.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 3 &mdash; Senza Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> Cos'è il pattern Observer in ingegneria del software?</p>
+                <p><span class="label-bold">Answer:</span> **Pattern Observer (osservatore)**  
+
+Il pattern **Observer** è un modello di progettazione che permette a più oggetti (gli *observer*) di essere informati automaticamente quando cambia lo stato di un altro oggetto centrale, chiamato **subject** (o *model*).  
+
+### Come funziona  
+1. **Subject (modello)**  
+   - Contiene i dati o la logica di business dell’applicazione.  
+   - Mantiene una **lista di observer** registrati.  
+   - Fornisce metodi per **registrare** (`register`) e **deregistrare** (`unregister`) gli observer.  
+
+2. **Observer**  
+   - Implementa un’interfaccia comune che espone un unico metodo di callback (ad esempio `update()`).  
+   - Non è necessario che il subject conosca il tipo concreto dell’observer; basta che rispetti l’interfaccia.  
+
+3. **Notifica**  
+   - Ogni volta che il subject cambia il proprio stato, chiama il metodo di callback di tutti gli observer presenti nella lista.  
+   - Gli observer, a loro volta, reagiscono aggiornando la propria rappresentazione (ad esempio una vista).  
+
+### Caratteristiche principali  
+- **Separazione delle responsabilità**: il modello gestisce solo i dati; la presentazione o altre reazioni sono delegate agli observer.  
+- **Bassa dipendenza dal tipo concreto**: il subject non deve conoscere le classi specifiche degli observer, ma solo l’interfaccia di callback.  
+- **Registrazione dinamica**: gli observer possono essere aggiunti o rimossi a runtime.  
+- **Accoppiamento**: sebbene il pattern riduca la dipendenza diretta dal tipo concreto, aumenta comunque l’accoppiamento logico tra subject e observer, poiché entrambi dipendono dal meccanismo di notifica.  
+
+### Vantaggi  
+- **Modularità**: aggiungere, rimuovere o modificare observer non richiede cambiamenti al subject.  
+- **Flessibilità**: più viste o componenti possono reagire allo stesso cambiamento di stato senza conoscere l’un l’altro.  
+- **Testabilità**: è più semplice isolare e testare singole parti (subject o observer) grazie alle interfacce ben definite.  
+
+In sintesi, il pattern Observer è un modo strutturato per **osservare e reagire ai cambiamenti di stato** di un oggetto centrale, mantenendo il codice più organizzato e facilitando l’estensione e la manutenzione dell’applicazione.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the answer directly explained the Observer pattern in software engineering without any irrelevant statements.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">0.92</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.92 because most relevant nodes are ranked near the top, but the third node (rank 3) is irrelevant – its reason says it "tratta di monitoraggio del codice e mitigazione dei danni, senza alcun riferimento al pattern Observer" – and the fifth node (rank 5) is also irrelevant, with a reason noting it "descrive la sincronizzazione tramite flusso e il ruolo del controllore, ma non contiene alcuna informazione sul pattern Observer." These out‑of‑place irrelevant nodes prevent a perfect score.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.50</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.50 because sentences 1 and 2 are supported by node(s) in retrieval context (node 1 describes the one‑to‑many list and automatic notification), whereas sentences 3 and 4 lack any supporting evidence (no update() method or mention of reactive/notification usefulness).</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.44</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.44 because the context mixes many irrelevant statements (e.g., "The statement describes the Adapter pattern ...", "The statement describes the MVC pattern ...") with only a few relevant ones such as "Il pattern OBSERVER consiste nell'archiviare i dati in un oggetto specializzato e consentire ad altri oggetti di osservarli" and "Il soggetto notifica automaticamente tutti gli osservatori ogni volta che il suo stato cambia"; the prevalence of off‑topic content lowers the overall relevancy.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions; the actual output fully aligns with the retrieval context.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 4 &mdash; Con Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> Cos'è il pattern Observer in ingegneria del software?</p>
+                <p><span class="label-bold">Answer:</span> **Il pattern Observer (osservatore)** è un modello comportamentale che permette a un oggetto — detto **subject** o **model** — di tenere traccia di una lista di altri oggetti, gli **observer**, e di avvisarli automaticamente ogni volta che il suo stato cambia.
+
+### Come funziona
+1. **Subject (modello)**  
+   * contiene i dati o la logica di business.  
+   * espone metodi per **registrare** (`attach`) e **deregistrare** (`detach`) gli observer.  
+   * quando il suo stato viene modificato, chiama un metodo di notifica (`notify`) che invoca, per ciascun observer, il loro **callback** (un metodo definito da un’interfaccia comune).
+
+2. **Observer (osservatore)**  
+   * implementa un’interfaccia con un unico metodo di callback, ad esempio `update()`.  
+   * non è conosciuto dal subject in forma concreta; il subject sa solo che l’oggetto rispetta quell’interfaccia.
+
+3. **Notifica**  
+   * Il subject non conosce i dettagli dei singoli observer, quindi non è accoppiato a classi specifiche.  
+   * Gli observer, una volta notificati, leggono i dati dal subject e aggiornano la propria rappresentazione (es. una vista).
+
+### Caratteristiche principali
+- **Disaccoppiamento**: il subject non dipende da classi concrete di observer; dipende solo dall’interfaccia di callback.  
+- **One‑to‑many**: un singolo subject può avere molti observer.  
+- **Aggiornamento automatico**: ogni modifica al subject genera una notifica a tutti gli observer registrati.  
+- **Estensibilità**: è facile aggiungere nuovi observer senza modificare il subject.
+
+### Vantaggi
+- **Modularità**: le parti del sistema (modello e viste) sono separate e possono evolvere indipendentemente.  
+- **Riutilizzabilità**: lo stesso subject può essere osservato da diversi tipi di viste (es. display temperatura, statistiche, previsioni).  
+- **Manutenibilità**: il flusso di aggiornamento è centralizzato nel subject, riducendo la necessità di coordinazione manuale tra componenti.
+
+### Come si applica al tuo caso (stazione meteo)
+- **Subject**: l’oggetto `DatiMeteo` che riceve i dati dai sensori.  
+- **Observer**: i tre display (temperatura, statistiche, previsioni) che implementano l’interfaccia `Observer` con il metodo `update()`.  
+- `DatiMeteo` registra i display tramite `attach()`. Quando i dati cambiano, chiama `notify()`, che a sua volta invoca `update()` su ciascun display. I display leggono i nuovi dati da `DatiMeteo` e si aggiornano, senza che `DatiMeteo` conosca i dettagli di come ciascun display li mostri.
+
+In sintesi, il pattern Observer consente di **separare** la logica di raccolta dati dalla logica di presentazione, garantendo che tutti i componenti interessati vengano aggiornati in modo automatico e con il minimo accoppiamento.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the answer directly explained the Observer pattern and its relevance to the weather station scenario with no irrelevant content.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the first two retrieval-context nodes (rank 1 and rank 2) directly address the Observer pattern – the first cites "Il pattern OBSERVER consiste nell'archiviare i dati... Il soggetto notifica automaticamente tutti gli osservatori..." and the second notes that "il modello non conosce il tipo concreto dei suoi osservatori" – while the remaining nodes (ranks 3‑5) are unrelated, discussing mitigation, MVC, or flow synchronization. All relevant nodes are ranked above the irrelevant ones, achieving perfect contextual precision.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.50</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.50 because node(s) in retrieval context (Node 1) substantiate sentences 1‑2 about the one‑to‑many relationship and automatic updates, but give no support for sentences 3‑4 concerning an explicit Observer interface with update() and the pattern’s usefulness for reactive systems, leaving half of the output unsupported.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.44</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.44 because the context mixes many irrelevant parts—e.g., "The statement refers to the Adapter pattern..." and "The statement describes the MVC pattern, not the Observer pattern"—with several directly relevant statements about Observer, such as "Il pattern OBSERVER consiste nell'archiviare i dati..." and "Il soggetto notifica automaticamente tutti gli osservatori...". The presence of both unrelated and pertinent info yields a moderate relevance score.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the actual output fully aligns with the retrieval context, with no contradictions detected.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 5 &mdash; Senza Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> Come è strutturata una classe di testing?</p>
+                <p><span class="label-bold">Answer:</span> **Come è strutturata una classe di testing (con JUnit 4 per Android)**  
+
+Una classe di testing è un normale file Java che contiene tutti gli elementi necessari per preparare l’ambiente, eseguire i test e pulire le risorse. La sua struttura tipica è la seguente:
+
+| Sezione | Scopo | Come si scrive (esempio) |
+|---------|-------|--------------------------|
+| **Import** | Porta le classi di JUnit (e altre dipendenze) nel file. | `import org.junit.*;` |
+| **Dichiarazione della classe** | Rappresenta il “contenitore” dei test. | `public class MyFeatureTest { … }` |
+| **Metodo `setUp()`** | Eseguito **prima** di ogni test; crea o configura le risorse necessarie (es. oggetti, mock, database). | ```java @Before public void setUp() { /* inizializzazioni */ } ``` |
+| **Metodo `tearDown()`** | Eseguito **dopo** ogni test; libera le risorse (chiude connessioni, cancella dati temporanei). | ```java @After public void tearDown() { /* pulizia */ } ``` |
+| **Metodi di test** | Contengono le asserzioni che verificano il comportamento del codice. Il nome di solito inizia con `test` (o è annotato con `@Test`). | ```java @Test public void testCalcolaSomma() { int risultato = calcolatore.somma(2,3); Assert.assertEquals(5, risultato); } ``` |
+| **Suite (facoltativa)** | Raggruppa più classi di test in un unico “test suite”. Serve al runner per eseguire tutti i test insieme. | ```java @RunWith(Suite.class) @Suite.SuiteClasses({MyFeatureTest.class, AltraFeatureTest.class}) public class AllTests { } ``` |
+
+### Flusso di esecuzione gestito dal test runner
+1. **Setup** – il runner chiama `setUp()` per preparare l’ambiente.  
+2. **Esecuzione del test** – il runner invoca un metodo annotato `@Test`.  
+3. **Tear‑down** – subito dopo il test, il runner chiama `tearDown()` per pulire.  
+
+Questo schema si ripete per **ogni** metodo di test presente nella classe.  
+
+### Riepilogo dei componenti chiave
+- **`setUp()`** (`@Before`): prepara le risorse.  
+- **`tearDown()`** (`@After`): rilascia le risorse.  
+- **Metodi `testXXX()`** (`@Test`): contengono le asserzioni (es. `Assert.assertEquals`, `Assert.assertTrue`).  
+- **`Suite()`** (opzionale, con annotazioni `@RunWith` e `@Suite.SuiteClasses`): combina più classi di test.  
+
+Con questa struttura la classe di testing è pronta a essere eseguita da qualsiasi test runner Android (JUnit, AndroidJUnitRunner, ecc.) e a fornire risultati chiari su quali parti del codice funzionano correttamente e quali no.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the response directly answered the question about how a testing class is structured, with no irrelevant content.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the first two nodes (rank 1 and rank 2) are clearly relevant – node 1’s reason cites "Il documento descrive le tre fasi..." and node 2’s reason mentions "Viene menzionato JUnit..." – while the next three nodes (ranks 3‑5) are irrelevant, as their reasons note they discuss system‑test types, BDD scenarios, and test coverage criteria without any setup, test, or teardown details. Since all relevant nodes are ranked above all irrelevant ones, the contextual precision cannot be any higher than the perfect 1.00.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.50</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.50 because sentence 1, describing Setup/Test/Teardown and citing setUp()/tearDown(), is directly supported by node(s) in retrieval context (Node 1 and Node 2), whereas sentence 2 mentions mock and the AAA principle, which have no corresponding nodes.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.29</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.29 because most of the retrieved statements are off‑topic – e.g., they only mention Android testing types, JUnit framework details, or coverage criteria – and do not explain how a testing class is structured, while only a few lines such as "Il test runner crea delle classi di test con i metodi di test" and "Per creare gli unit Test si crea una classe test che implementa i metedi: setUp(), tearDown, TestXXX, Suite()" actually touch on class creation and composition.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions, indicating perfect alignment between the actual output and the retrieval context.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 6 &mdash; Con Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> Come è strutturata una classe di testing?</p>
+                <p><span class="label-bold">Answer:</span> Una classe di testing in JUnit 4 è organizzata in modo molto semplice e segue lo schema **composite** del framework (TestSuite = composite, TestCase = leaf).  
+Ecco i componenti fondamentali che deve contenere:
+
+| Parte della classe | Scopo | Come si scrive (secondo il contesto) |
+|--------------------|-------|--------------------------------------|
+| **setUp()** | Metodo di **Setup**: viene chiamato dal test runner **prima di ogni singolo test** per creare o configurare le risorse necessarie (es. oggetti, connessioni, dati di test). | ```java public void setUp() throws Exception { … }``` |
+| **tearDown()** | Metodo di **Tear‑Down**: viene eseguito **dopo ogni test** per liberare le risorse, chiudere connessioni, cancellare dati temporanei, ecc. | ```java public void tearDown() throws Exception { … }``` |
+| **TestXXX** | Metodi di **esecuzione del test**. Ogni metodo che inizia con il prefisso `Test` è considerato un caso di test (leaf). All’interno si scrivono le **asserzioni** che verificano il comportamento atteso del codice. | ```java public void TestCalcolaSomma() { assertEquals(5, calcolatore.somma(2,3)); }``` |
+| **Suite()** (opzionale) | Metodo statico che costruisce un **TestSuite** raggruppando più classi di test. Serve a definire un “test path” o un insieme di scenari da eseguire insieme. | ```java public static Test Suite() { TestSuite suite = new TestSuite(); suite.addTestSuite(MiaClasseTest.class); return suite; }``` |
+
+### Flusso di esecuzione tipico
+
+1. **Setup** – il runner chiama `setUp()` → le risorse sono pronte.  
+2. **Esecuzione** – il runner invoca un metodo `TestXXX` → le asserzioni verificano il risultato.  
+3. **Tear‑Down** – subito dopo il test, il runner chiama `tearDown()` → le risorse vengono rilasciate.  
+
+Questo ciclo si ripete **per ogni metodo di test** presente nella classe, garantendo che le variabili e le risorse non rimangano “sporche” da un test all’altro (problema che causava i fallimenti casuali nel tuo caso).
+
+### Schema minimale di una classe JUnit 4
+
+```java
+import junit.framework.TestCase;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+public class MiaClasseTest extends TestCase {
+
+    // 1. Setup – eseguito prima di ogni test
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        // inizializza oggetti, connessioni, dati di test, ecc.
+    }
+
+    // 2. Tear‑Down – eseguito dopo ogni test
+    @Override
+    protected void tearDown() throws Exception {
+        // libera risorse, chiude connessioni, pulisce dati temporanei
+        super.tearDown();
+    }
+
+    // 3. Metodi di test (leaf)
+    public void TestFunzioneA() {
+        // asserzioni che verificano il comportamento atteso
+        assertEquals(10, oggetto.calcola(5));
+    }
+
+    public void TestFunzioneB() {
+        assertTrue(oggetto.isValido());
+    }
+
+    // 4. (Opzionale) Suite che raggruppa più classi di test
+    public static Test Suite() {
+        TestSuite suite = new TestSuite();
+        suite.addTestSuite(MiaClasseTest.class);
+        // aggiungi altre classi di test se necessario
+        return suite;
+    }
+}
+```
+
+**Punti chiave da ricordare**
+
+- **`setUp()` e `tearDown()`** sono eseguiti **per ogni test**, non una sola volta per l’intera classe.  
+- I metodi di test devono iniziare con `Test` (o, in alternativa, essere annotati con `@Test` se si usa la sintassi più moderna).  
+- Le **asserzioni** (`assertEquals`, `assertTrue`, ecc.) sono il “cuore” del test: confrontano il risultato reale con quello atteso.  
+- Se vuoi raggruppare più classi, usa il metodo statico `Suite()` per creare un `TestSuite`.
+
+Seguendo questa struttura, ogni caso di test parte da uno stato pulito, le risorse vengono gestite correttamente e i risultati sono affidabili – esattamente quello che richiede la metodologia TDD.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the response fully answered the user's question about JUnit test class structure with no irrelevant content.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the first two nodes (rank 1 and rank 2) are clearly relevant – the first cites "Setup: Prima dell'esecuzione dei metodi di test" and the second details "setUp()", "tearDown" – and all irrelevant nodes (rank 3‑5) appear only after these, so the relevant nodes are ranked higher than the irrelevant ones.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.50</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.50 because sentence 1 of the expected output is only partially grounded: nodes 1 and 2 in the retrieval context support the setup/teardown discussion, but no node mentions mocks or the AAA (Arrange‑Act‑Assert) principle, leaving key information unsupported.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.32</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.32 because most of the retrieved material is off‑topic – e.g., “The statement mentions that Android supports various test types …” and “The statement describes the composite design pattern …” – whereas only a few lines are pertinent, such as “Setup: Prima dell'esecuzione dei metodi di test, il test runner può invocare metodi di setup …” and “Tear Down: Dopo l'esecuzione di un test, possono essere invocati metodi di teardown …”. The limited relevance results in a low contextual‑relevancy score.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context. Great job!</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 7 &mdash; Senza Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> What is the purpose of an oscilloscope?</p>
+                <p><span class="label-bold">Answer:</span> The purpose of an oscilloscope is to capture an electrical signal, turn it into a numeric (digital) representation, store the sampled data, process it, and then display the waveform on a screen.  
+By using a trigger function, the instrument can synchronize the start of acquisition so that repetitive or complex signals appear stable on the display. In a digital storage oscilloscope this whole process follows four steps:
+
+1. **Analog conditioning, sampling and A/D conversion** – the incoming analog signal is prepared, sampled at precise time intervals and converted into numbers.  
+2. **Memory storage** – the digital samples are written into a circular buffer (memory).  
+3. **Numerical processing** – the stored samples are used to reconstruct the signal in the time domain (and, if desired, to compute its spectrum with an FFT).  
+4. **Visualization** – the reconstructed waveform (and optionally its spectrum) is shown on the display.
+
+Thus, an oscilloscope’s main role is to let the user observe, analyze, and measure electrical signals in a clear, stable visual form.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the response directly and completely answers the question about the purpose of an oscilloscope with no irrelevant information.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because every retrieved node is relevant: the first node notes "visualizzazione su un monitor", the second mentions the trigger function that "synchronizza l'acquisizione e la visualizzazione", the third describes "visualizzazione del risultato su un display", the fourth highlights "visualizzare lo spettro del segnale", and the fifth talks about showing "porzioni delle forme d'onda". Since relevant nodes occupy ranks 1‑5 and there are no irrelevant nodes ranked above them, contextual precision is perfect.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.75</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.75 because sentences 1‑3 of the expected output are well supported by nodes in the retrieval context (node 1 for the definition, nodes 4 and 5 for frequency/amplitude/shape, and nodes 1 and 2 for analog/digital capture and triggering), while sentence 4 lacks any supporting node, leaving a gap.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.74</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.74 because the context mixes relevant info—e.g., "L’oscilloscopio digitale è uno strumento che converte in forma numerica i segnali analogici…" and "La visualizzazione del risultato su un display"—which describe the oscilloscope’s purpose, with irrelevant pieces such as "è la larghezza di banda dell'oscilloscopio" and "la posizione di default del trigger dell'oscilloscopio" that do not address the overall purpose.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the actual output fully aligns with the retrieval context with no contradictions.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 8 &mdash; Con Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> What is the purpose of an oscilloscope?</p>
+                <p><span class="label-bold">Answer:</span> The purpose of an oscilloscope is to let you **see how an electrical signal changes over time**.  
+
+- **Capture** – The instrument samples the incoming analog waveform, converts each sample to a numeric value (A/D conversion), and stores those values in memory.  
+- **Trigger** – A trigger circuit watches the signal and tells the oscilloscope exactly when to start recording, so the displayed waveform is stable and repeatable instead of a blurry mess.  
+- **Process & Re‑construct** – The stored digital samples are processed to rebuild the time‑domain waveform (and, if desired, to compute other representations such as a frequency spectrum via FFT).  
+- **Display** – The reconstructed waveform is shown on a screen, allowing you to observe the shape, amplitude, timing, and any fast transients or noise spikes that a multimeter would miss.
+
+In short, an oscilloscope provides a visual, time‑resolved picture of a signal, making it possible to diagnose problems like distortion, glitches, or brief noise events that are invisible to instruments that only give average or static measurements.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the response fully addressed the user's query about an oscilloscope's purpose and visualization capabilities with no irrelevant content.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because every retrieved node is relevant and appears before any irrelevant ones (there are none). Node 1 says "visualizzazione su un monitor", node 2 notes "synchronizzare l'acquisizione", node 3 mentions "visualizzazione del risultato su un display", node 4 highlights "visualizzare lo spettro del segnale", and node 5 states "mostrare porzioni delle forme d'onda"—all supporting the oscilloscope’s visualization purpose. With no irrelevant nodes ranked higher, the precision is perfect.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because every sentence in the expected output is directly backed by nodes in the retrieval context: sentence 1 matches Node 1, sentence 2 matches Node 4, sentence 3 draws from Nodes 2 and 5, and sentence 4 is supported by Nodes 1 and 2.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.95</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.95 because the retrieval context mainly explains the oscilloscope’s purpose – e.g., "L’oscilloscopio digitale è uno strumento che converte in forma numerica i segnali analogici..." and details its trigger and visualization functions – which directly answers the user’s question, while only a single irrelevant note about "la posizione di default del trigger dell'oscilloscopio" does not undermine the overall relevance.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions, indicating the output aligns perfectly with the retrieval context.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 9 &mdash; Senza Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> Explain the concept of RMS voltage.</p>
+                <p><span class="label-bold">Answer:</span> **RMS (Root‑Mean‑Square) – valore efficace della tensione**
+
+In un circuito in corrente alternata la tensione varia nel tempo, perciò non ha un valore “costante” come in corrente continua.  
+Per valutare quanto “potere” reale può fornire una tensione alternata si usa il **valore RMS** (in italiano *valore efficace*).
+
+---
+
+### 1. Definizione semplice  
+Il valore RMS di una tensione è il valore di una tensione continua (DC) che, se applicata allo stesso carico resistivo, produrrebbe la **stessa potenza media** della tensione alternata.
+
+In altre parole:  
+*Vrms è la tensione continua che dissipa nella resistenza la stessa potenza media di quella dissipata dalla tensione sinusoidale reale.*
+
+---
+
+### 2. Come si calcola  
+Matematicamente il valore RMS è:
+
+\[
+V_{\text{RMS}} = \sqrt{\frac{1}{T}\int_{0}^{T} [v(t)]^{2}\,dt}
+\]
+
+- **v(t)** è la tensione istantanea in funzione del tempo.  
+- **T** è il periodo della forma d’onda (per una sinusoide è il tempo di un ciclo completo).  
+- Si **eleva al quadrato** la tensione in ogni istante, si fa la **media** (integrale diviso T) e infine si prende la **radice quadrata** del risultato.
+
+---
+
+### 3. Caso più comune: sinusoide pura  
+Se la tensione è sinusoidale:
+
+\[
+v(t)=V_{\text{picco}}\;\sin(\omega t)
+\]
+
+allora il valore RMS diventa:
+
+\[
+V_{\text{RMS}} = \frac{V_{\text{picco}}}{\sqrt{2}} \approx 0{,}707\,V_{\text{picco}}
+\]
+
+Per esempio, una rete domestica europea ha una tensione di **230 V RMS**; il picco reale della sinusoide è quindi circa **230 × √2 ≈ 325 V**.
+
+---
+
+### 4. Perché è importante  
+- **Potenza media**: la potenza dissipata in una resistenza R è  
+  \[
+  P_{\text{media}} = \frac{V_{\text{RMS}}^{2}}{R}
+  \]
+  (stessa formula della corrente continua).  
+- **Confronti**: grazie al valore RMS possiamo confrontare direttamente tensioni AC con tensioni DC, senza dover considerare la forma d’onda.  
+- **Strumenti di misura**: i multimetri “RMS” calcolano internamente la radice quadrata della media del quadrato della tensione per fornire il valore efficace, evitando errori dovuti al “carico” del voltmetro.
+
+---
+
+### 5. Riepilogo in parole semplici  
+
+- **RMS = radice della media quadratica** della tensione nel tempo.  
+- Rappresenta la **tensione equivalente continua** che produce la stessa potenza media su un carico resistivo.  
+- Per una sinusoide è **Vpicco / √2**.  
+- È il valore che si usa nella pratica per parlare di “tensione di rete” (es. 120 V RMS, 230 V RMS) e per calcolare la potenza reale in un circuito AC.
+
+Conoscere il valore RMS permette di valutare correttamente l’energia e la potenza nei circuiti in corrente alternata, senza doversi preoccupare dei dettagli della forma d’onda in ogni istante.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the response fully explained RMS voltage with no irrelevant statements.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the top‑ranked nodes (rank 1 and rank 2) directly address RMS voltage, with reasons citing "valore medio della potenza istantanea" and the "media della potenza istantanea"—the core averaging concept behind RMS. The subsequent nodes (ranks 3‑5) are unrelated, discussing voltmeter loading, reactive loads, and component descriptions, and they correctly appear after the relevant content.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.00</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.00 because none of the nodes in retrieval context (nodes 1‑5) mention RMS voltage, its definition, the sqrt‑of‑average‑squared‑values calculation, the peak‑to‑√2 relationship, or its link to equivalent DC power, so the expected sentences cannot be attributed to any retrieved content.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.19</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.19 because the retrieved passages focus on topics like voltmeter loading, instantaneous power (e.g., "potenza istantanea", "valore medio della potenza istantanea"), phase shifts and load impedance, none of which define or explain RMS voltage, and the only marginally related statements are generic mentions of "potenza istantanea" and average power in AC circuits, which do not address the RMS concept.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions, showing the actual output perfectly aligns with the retrieval context.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 10 &mdash; Con Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> Explain the concept of RMS voltage.</p>
+                <p><span class="label-bold">Answer:</span> **RMS (Valore Efficace) di una tensione alternata**
+
+1. **Che cos’è il valore RMS?**  
+   RMS sta per *Root‑Mean‑Square* (radice quadrata della media dei quadrati).  
+   Per una tensione sinusoidale \(v(t)=V_{\text{picco}}\sin(\omega t)\) il valore RMS è:
+
+   \[
+   V_{\text{RMS}}=\sqrt{\frac{1}{T}\int_{0}^{T}v^{2}(t)\,dt}
+               =\frac{V_{\text{picco}}}{\sqrt{2}}
+   \]
+
+   dove \(T\) è il periodo della sinusoide. In pratica si prende la media della potenza istantanea (che è proporzionale a \(v^{2}(t)\)) e poi se ne fa la radice quadrata.
+
+2. **Perché si usa il valore RMS?**  
+   - **Potenza media:** Nei circuiti in AC ci interessa la potenza media dissipata in un periodo, cioè la *potenza attiva*. Poiché la potenza istantanea è \(p(t)=v(t)i(t)\) e per un carico puramente resistivo \(i(t)=v(t)/R\), la potenza media dipende da \(\langle v^{2}(t)\rangle\). Il valore RMS è proprio la quantità che, se fosse una tensione continua, produrrebbe la stessa potenza media (e quindi la stessa quantità di calore) del segnale AC.
+   - **Equivalenza termica:** Un resistore attraversato da una tensione RMS di 230 V dissipa la stessa potenza (e genera la stessa energia termica) di un resistore attraversato da una tensione continua di 230 V. Questo è il motivo per cui il valore RMS è chiamato *valore efficace*.
+
+3. **Perché la presa è indicata “230 V” e non il picco di 325 V?**  
+   - Il valore nominale di una rete domestica (es. 230 V in Europa) è il **valore RMS** della tensione sinusoidale.  
+   - Il picco della sinusoide è:
+
+     \[
+     V_{\text{picco}} = V_{\text{RMS}}\;\sqrt{2}=230\;\text{V}\times1{,}414 \approx 325\;\text{V}
+     \]
+
+   - Anche se la tensione raggiunge 325 V nei punti di massimo, la potenza media (e quindi il calore prodotto) è determinata dal valore RMS di 230 V. Per questo il valore indicato sulla presa è quello RMS.
+
+4. **Come si collega al concetto di potenza media nei circuiti AC?**  
+   - La potenza media dissipata in un carico resistivo è:
+
+     \[
+     P_{\text{media}} = \frac{V_{\text{RMS}}^{2}}{R}
+     \]
+
+   - Questo è esattamente lo stesso risultato che otterremmo usando una tensione continua di valore \(V_{\text{RMS}}\).  
+   - Per carichi reattivi (induttivi o capacitivi) la potenza media è più piccola perché tensione e corrente sono sfasate; tuttavia il valore RMS della tensione rimane definito come sopra.
+
+5. **Riassunto pratico**  
+   - **RMS** = valore che, se applicato come DC, produce la stessa potenza media (stessa energia termica).  
+   - **230 V RMS** → picco ≈ 325 V, ma la potenza media è quella di 230 V DC.  
+   - Quando si misura la tensione con un voltmetro, è importante che il voltmetro non alteri il circuito (alta resistenza interna) per non introdurre errori di “carico”.
+
+Con queste idee, il valore RMS diventa il modo più utile per confrontare tensioni AC con tensioni DC in termini di energia dissipata e di “efficacia” pratica. Buono studio per l’esame!</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">0.93</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.93 because the answer was largely on point but included an unnecessary comment about voltmeter loading, which doesn’t directly address the RMS voltage concept, preventing a perfect rating.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the first two nodes (rank 1 and rank 2) are directly about RMS voltage – they mention “valore medio della potenza istantanea…” and “effective (average‑power) value” – while the later nodes (ranks 3‑5) are about measurement technique or other topics and do not discuss RMS, so irrelevant nodes are correctly ranked lower.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.00</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.00 because none of the nodes in retrieval context mention RMS voltage (sentence 1), provide the RMS calculation (sentence 2), give the sine‑wave RMS relation (sentence 3), or connect RMS values to equivalent DC power and measurement standards (sentence 4); the nodes only discuss average power and lack any RMS concepts.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.35</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.35 because the majority of the retrieved statements are unrelated to RMS voltage – e.g., they talk about "ensuring a voltmeter does not change the circuit current" and "phase shift in reactive circuits ('90 degrees out of phase')" – which do not explain effective (heating) value. Only a few remarks, such as "valore medio della potenza istantanea" and "potenza elettrica ... definita come potenza istantanea", touch on average power, offering limited relevance to the RMS concept.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the actual output perfectly matches the retrieval context with no contradictions.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 11 &mdash; Senza Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> ¿Qué es el análisis exploratorio de datos?</p>
+                <p><span class="label-bold">Answer:</span> El **análisis exploratorio de datos (AED)** es la fase inicial en la que se examinan los datos para descubrir sus principales características y relaciones antes de aplicar modelos más complejos.  
+
+**Objetivo principal**  
+- Resaltar, mediante gráficos y estadísticas resumidas, los rasgos más relevantes de cada variable (feature) del conjunto de datos.  
+- Identificar la intensidad y el tipo de relaciones que existen entre los atributos.
+
+**Fases típicas**  
+1. **Análisis univariado**: se estudia cada variable por separado, observando su distribución, valores típicos, outliers, etc.  
+2. **Análisis bivariado**: se examinan pares de variables para detectar correlaciones, tendencias o dependencias entre ellas.  
+3. (En la práctica también se pueden incluir análisis multivariados, aunque el texto menciona principalmente las dos primeras fases.)
+
+**Por qué es importante**  
+- Permite comprender mejor los procesos empresariales y la calidad de los datos disponibles.  
+- Ayuda a explorar las propiedades de las variables y a descubrir relaciones significativas.  
+- Sirve como base para la visualización de datos, facilitando la comunicación de resultados a audiencias no técnicas.  
+- Es esencial en los primeros pasos de proyectos de Business Intelligence, ya que orienta la selección de técnicas estadísticas o de machine learning que se aplicarán después.
+
+En resumen, el AED es una combinación de métodos gráficos y estadísticos que nos brinda una visión clara y preliminar de los datos, preparando el terreno para análisis más avanzados como la modelización predictiva o el descubrimiento de patrones.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the response directly answered the question about exploratory data analysis without any irrelevant statements.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">0.75</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.75 because the first node (rank 1) is relevant – it’s cited as “Il documento descrive direttamente l'...” – but an irrelevant node appears next (rank 2) with “Il testo parla di "data analytics"...”, and another irrelevant node follows at rank 3. This pushes the second relevant node down to rank 4 (“Il documento sottolinea attività tipiche dell'EDA...”), and a further irrelevant node sits at rank 5. Because relevant nodes are not all ranked above the irrelevant ones, the precision is good but not perfect.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.67</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.67 because sentences 1‑3 about EDA's purpose and importance are covered by node 1 and node 4 in the retrieval context, but the claim in sentence 2 about specific descriptive statistics (media, desviación estándar) and visualizations (histogramas, gráficos de dispersión) lacks any supporting node.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.53</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.53 because the retrieved passage contains both irrelevant material—e.g., "The statement describes general data analytics ('processo di esaminare, trasformare e modellare i dati') which does not specifically explain what exploratory data analysis is"—and clearly relevant content, such as "Lo scopo principale dell'analisi esplorativa dei dati è evidenziare le caratteristiche rilevanti di ciascuna feature...". The presence of useful definitions is offset by multiple unrelated statements, yielding a moderate relevance score.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions, showing perfect alignment between the actual output and the retrieval context.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 12 &mdash; Con Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> ¿Qué es el análisis exploratorio de datos?</p>
+                <p><span class="label-bold">Answer:</span> **Análisis exploratorio de datos (AED)**  
+
+El análisis exploratorio de datos es la primera fase de cualquier proyecto de análisis o de Business Intelligence. Su objetivo principal es **conocer y describir** el conjunto de datos antes de aplicar modelos más complejos. Para ello se utilizan **métodos gráficos** (histogramas, diagramas de dispersión, box‑plots, etc.) y **estadísticas resumidas** (media, mediana, desviación estándar, percentiles, conteos de valores nulos, etc.).  
+
+### Qué se busca con el AED  
+- **Identificar las características relevantes** de cada variable (tipo, rango, distribución, presencia de valores atípicos).  
+- **Evaluar la calidad de los datos**: detectar valores nulos, errores de captura o inconsistencias.  
+- **Explorar relaciones entre variables** para ver si existen correlaciones o patrones interesantes que puedan influir en análisis posteriores.  
+
+### Fases principales del AED  
+
+| Fase | Qué se analiza | Herramientas típicas |
+|------|----------------|----------------------|
+| **Univariada** | Cada atributo por separado (por ejemplo, edad, ingresos, número de compras). | Histogramas, diagramas de densidad, tablas de frecuencia, medidas de tendencia y dispersión. |
+| **Bivariada** | Pares de atributos para observar cómo se relacionan (por ejemplo, edad vs. gasto). | Diagramas de dispersión, tablas de contingencia, coeficientes de correlación, box‑plots por categoría. |
+| **Multivariada** (aunque no se menciona explícitamente en el texto, suele seguir) | Interacciones entre tres o más variables. | Mapas de calor de correlación, análisis de componentes principales, etc. |
+
+### Por qué es importante  
+
+- **Comprender los procesos empresariales** a partir de los datos que los describen.  
+- **Valorar la calidad de los datos** antes de invertir tiempo en modelado.  
+- **Descubrir relaciones significativas** que pueden guiar la selección de variables para modelos predictivos.  
+- **Comunicar resultados** de forma visual a audiencias no técnicas, facilitando la toma de decisiones.
+
+En resumen, el análisis exploratorio de datos es la práctica de **examinar, visualizar y resumir** la información disponible para obtener una visión clara de su estructura y calidad, sentando las bases para cualquier análisis posterior, ya sea descriptivo, predictivo o de machine learning.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the answer was completely on point with no irrelevant statements.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">0.70</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.70 because the first node (rank 1) is relevant – its reason says "Il documento descrive chiaramente l'"analisi esplorativa dei dati"..." – but nodes 2 and 3 are irrelevant, with reasons like "Questo testo parla di "data analytics" in senso generale..." and "Il contenuto si concentra su Data Analytics, Machine Learning e Data Mining...". These irrelevant nodes appear before the next relevant nodes (rank 4 and 5), whose reasons highlight data quality evaluation and descriptive analytics. The early irrelevant nodes lower the contextual precision, while the top‑ranked relevant node keeps it from being lower.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because each sentence in the expected output is clearly attributable to nodes in the retrieval context: sentences 1‑2 are supported by node 1, and sentence 3 is supported by node 4, with no gaps.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.56</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.56 because most of the retrieved fragments are off‑topic (e.g., "Il Machine Learning si" and statements about machine learning in Italian, as noted in the irrelevancy reasons), but the context does contain a relevant definition: "Lo scopo principale dell'analisi esplorativa dei dati è evidenziare le caratteristiche rilevanti di ciascuna feature..." and mentions the three EDA phases. This blend of irrelevant and relevant material yields a moderate relevance score.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="case-card">
+            <h3>Case 13 &mdash; Senza Riassunto</h3>
+
+            <div class="case-details">
+                <p><span class="label-bold">Query:</span> ¿Para qué sirve la regresión lineal?</p>
+                <p><span class="label-bold">Answer:</span> La regresión lineal sirve para **modelar y cuantificar la relación lineal entre una variable independiente (X) y una variable dependiente (Y)**. Con ella se obtiene una ecuación de la forma  
+
+\[
+Y = a + bX
+\]
+
+donde *a* es la intersección con el eje Y y *b* la pendiente que indica cuánto cambia Y cuando X varía en una unidad.
+
+### Principales utilidades
+
+1. **Predicción**  
+   - Una vez ajustada la recta a los datos de entrenamiento, podemos predecir el valor de Y para cualquier nuevo valor de X.
+
+2. **Interpretación de la relación**  
+   - La pendiente *b* muestra la **dirección y la fuerza** de la correlación: si *b* es positivo, X y Y se mueven en la misma dirección; si es negativo, se mueven en direcciones opuestas.
+   - La disposición de los puntos en el diagrama de dispersión (scatter plot) ayuda a visualizar si la relación es aproximadamente lineal (puntos alineados) o si existen patrones diferentes.
+
+3. **Detección de outliers**  
+   - Los puntos que se alejan mucho de la recta ajustada aparecen como outliers y pueden indicar errores de medida o casos especiales que merecen análisis adicional.
+
+4. **Evaluación de la complejidad del modelo**  
+   - La regresión lineal es un modelo **simple**: tiene **alto sesgo (bias) y baja varianza**, lo que la hace estable frente a pequeñas variaciones en los datos, aunque pueda no capturar relaciones más complejas.
+
+En resumen, la regresión lineal es una herramienta básica pero poderosa para **entender, describir y predecir** cómo una variable depende de otra cuando esa dependencia es aproximadamente lineal.</p>
+            </div>
+
+            <h4>DeepEval Metrics</h4>
+            <div class="table-wrapper" style="margin-bottom: 0; box-shadow: none; border: 1px solid #eee;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Score</th>
+                            <th>Success</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>Answer Relevancy</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because the response fully addressed the question about the purpose of linear regression with no irrelevant content.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Precision</td>
+                            <td class="metric-score">0.70</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.70 because the first node (rank 1) is relevant – it notes "regressioni lineari" and discusses their use – but three irrelevant nodes appear in ranks 2‑4 (e.g., rank 2 says "Il testo parla di 'Linearità riferita allo zero'" and rank 3 states "non tratta della regressione lineare"), pushing the second relevant node down to rank 5. These misplaced irrelevant nodes keep the precision below perfect, yet the early relevant node maintains a respectable score.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Recall</td>
+                            <td class="metric-score">0.50</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.50 because sentence 1 is supported by node 5 (mention of dependent and independent variables) and sentence 4 is supported by node 4 (linearity assumption), but sentences 2 and 3 have no corresponding information in the retrieval context, leaving half of the content unsupported.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Contextual Relevancy</td>
+                            <td class="metric-score">0.35</td>
+                            <td>
+                                <span class="status-false">
+                                    FAIL
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 0.35 because the majority of retrieved text talks about bias‑variance, dataset size, regularisation and calibration linearity – e.g., "The statement only describes the bias‑variance characteristics of linear regression" and "The passage discusses how increasing dataset size affects model variance" – which do not explain the purpose of linear regression, while only a few points such as "Mostra la correlazione tra due variabili (positiva, negativa o nulla)" and "Aiuta a individuare eventuali outlier" are marginally relevant.</td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Faithfulness</td>
+                            <td class="metric-score">1.00</td>
+                            <td>
+                                <span class="status-true">
+                                    PASS
+                                </span>
+                            </td>
+                            <td class="reason-cell">The score is 1.00 because there are no contradictions, indicating perfect faithfulness to the retrieval context.</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>

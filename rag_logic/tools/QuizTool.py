@@ -13,16 +13,26 @@ class QuizTool(IToolStrategy):
     def __init__(self):
         super().__init__()
 
-    def execute(self, retriever, query, language_hint: str = "italian", n_questions=5,
+    def execute(self, retriever, query, n_questions=5,
                 difficulty="medium"):
 
         user_query_str = query.get("user_query", "")
 
         filtered_docs = self._retrieve_documents(retriever, user_query_str)
 
+        language = self._detect_language_from_query(user_query_str)
+
+        if language:
+            lang_instruction = f"Answer in {language}"
+            target_metadata = language
+        else:
+            lang_instruction = "Answer in the same language used in the User Query"
+            target_metadata = "auto-detected"
+
         if not filtered_docs:
             return {"type": "QUIZ", "result": [],
-                    "ai_response": "Nessun dato"}
+                    "ai_response": "Nessun dato",
+                    "language": target_metadata}
 
         system_prompt = f"""
         You are an AI assistant that generates multiple-choice quiz questions from a given text.
@@ -34,7 +44,7 @@ class QuizTool(IToolStrategy):
             - "answer_list": a list of 3-4 possible answers
             - "correct_answer": the correct answer (must be one of the options in answer_list)
             - "difficulty": "{difficulty}"
-        - Language: {language_hint}
+        - {lang_instruction}
         - Respond ONLY in valid JSON format as a list of objects:
           [
             {{{{ 
@@ -72,7 +82,6 @@ class QuizTool(IToolStrategy):
             json_result = quiz_chain.invoke({
                 "filtered_docs": self.format_docs(filtered_docs),
                 "query": user_query_str,
-                "language": language_hint
             })
 
             json_str = json_result.replace("```json", "").replace("```", "").strip()
@@ -83,7 +92,7 @@ class QuizTool(IToolStrategy):
                 "result": quiz_data,
                 "docs_source": filtered_docs,
                 "metadata": {
-                    "language": language_hint,
+                    "language": target_metadata,
                     "n_questions": n_questions,
                     "difficulty": difficulty
                 },
@@ -94,5 +103,6 @@ class QuizTool(IToolStrategy):
             return {
                 "type": "QUIZ",
                 "result": [],
-                "ai_response": f"Errore durante la generazione dei quiz: {str(e)}"
+                "ai_response": f"Errore durante la generazione dei quiz: {str(e)}",
+                "language": target_metadata
             }

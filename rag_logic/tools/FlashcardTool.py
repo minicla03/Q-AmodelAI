@@ -13,16 +13,26 @@ class FlashcardTool(IToolStrategy):
     def __init__(self):
         super().__init__()
 
-    def execute(self, retriever, query, language_hint="italian", n_flashcard=10, difficulty = "medium"):
+    def execute(self, retriever, query, language_hint, n_flashcard=10, difficulty = "medium"):
 
         user_query_str = query.get("user_query", "")
 
         filtered_docs = self._retrieve_documents(retriever, user_query_str)
 
+        language = self._detect_language_from_query(user_query_str)
+
+        if language:
+            lang_instruction = f"Answer in {language}"
+            target_metadata = language
+        else:
+            lang_instruction = "Answer in the same language used in the User Query"
+            target_metadata = "auto-detected"
+
         if not filtered_docs:
             return {"type": "FLASHCARD",
                     "result": [],
-                    "ai_response": "Nessun dato"}
+                    "ai_response": "Nessun dato",
+                    "language": target_metadata}
 
         system_prompt = f"""
             You are an AI assistant that generates study flashcards from a given text. 
@@ -34,7 +44,7 @@ class FlashcardTool(IToolStrategy):
               - a clear question
               - a concise answer
             - Difficulty level: {difficulty}
-            - Language: {language_hint}
+            - {lang_instruction}
             - Respond ONLY in valid JSON format as a list of objects:
               [
                 {{{{"question": "...", "answer": "..."}}}},
@@ -67,7 +77,6 @@ class FlashcardTool(IToolStrategy):
             json_result = flash_chain.invoke({
                 "filtered_docs":  self.format_docs(filtered_docs),
                 "query": user_query_str,
-                 "language": language_hint
             })
 
             json_str = json_result.replace("```json", "").replace("```", "").strip()
@@ -79,7 +88,7 @@ class FlashcardTool(IToolStrategy):
                 "result": flashcards_data,
                 "docs_source": filtered_docs,
                 "metadata": {
-                    "language": language_hint,
+                    "language": target_metadata,
                     "n_flashcards": n_flashcard,
                     "difficulty": difficulty
                 },
@@ -92,6 +101,7 @@ class FlashcardTool(IToolStrategy):
             return {
                 "type": "FLASHCARD",
                 "result": [],
-                "ai_response": f"Errore durante la generazione: {str(e)}"
+                "ai_response": f"Errore durante la generazione: {str(e)}",
+                "language": target_metadata
             }
 

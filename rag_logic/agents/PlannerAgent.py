@@ -17,12 +17,9 @@ class PlannerAgent:
     MAX_STEPS = 5
     SUMMARY_THRESHOLD = 10
 
-    def __init__(self,
-                 retriever: Any,
-                 language_hint: str):
+    def __init__(self, retriever: Any):
 
         self.retriever = retriever
-        self.language_hint=language_hint
 
     def _llm_router(self, state: AgentState) -> str:
 
@@ -63,7 +60,6 @@ class PlannerAgent:
             response = chain.invoke({
                 "input": user_query,
                 "history": ", ".join(state.history),
-                "language_hint": self.language_hint,
             })
             logger.info("Invio messaggi al modello LLM...")
 
@@ -103,7 +99,7 @@ class PlannerAgent:
         return self._llm_router(state)
 
     def execute_agent(self, query: str, conversation_history: list = None, message_count: int = 0) -> AgentState:
-        state = AgentState(user_query=query, language_hint=self.language_hint, message_count=message_count)
+        state = AgentState(user_query=query, message_count=message_count)
         state.retriever = self.retriever
 
         while not state.done and state.steps < self.MAX_STEPS:
@@ -137,8 +133,7 @@ class PlannerAgent:
             try:
                 result = context.execute(
                     retriever=state.retriever,
-                    query=tool_input,
-                    language=state.language_hint
+                    query=tool_input
                 )
             except Exception as e:
                 logger.error(f"Error executing {action}: {e}")

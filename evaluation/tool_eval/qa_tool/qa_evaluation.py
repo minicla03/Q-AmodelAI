@@ -25,11 +25,13 @@ logger = logging.getLogger(__name__)
 
 from rag_logic.ingestion.ingestion import IngestionFlow
 from rag_logic.tools.QATool import QATool
-from rag_logic.utils import detect_language_from_query
 
 from evaluation.tool_eval.qa_tool.qa_testset import TEST_CASES
-from evaluation.tool_eval.qa_tool.metrics import custom_metrics
-from evaluation.tool_eval.qa_tool.report_gen import generate_html_results
+from evaluation.tool_eval.qa_tool.metrics import (
+    custom_metrics,
+    calculate_retrieval_metrics, extract_retrieved_doc_ids
+)
+from evaluation.tool_eval.qa_tool.report_gen import  generate_qa_report
 
 from deepeval import evaluate
 from deepeval.models import OllamaModel
@@ -41,6 +43,30 @@ from deepeval.metrics import (
     AnswerRelevancyMetric,
     FaithfulnessMetric
 )
+
+import json
+import datetime
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Gestisce oggetti non serializzabili (come datetime o oggetti custom) convertendoli in stringa."""
+    def default(self, obj):
+        if isinstance(obj, (datetime.date, datetime.datetime)):
+            return obj.isoformat()
+        try:
+            # Prova a convertire oggetti custom (es. risultati DeepEval) in dict o str
+            return obj.__dict__
+        except AttributeError:
+            return str(obj)
+        return super().default(obj)
+
+def save_checkpoint(results, filename="checkpoint_results.json"):
+    """Salva i risultati parziali su file."""
+    try:
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(results, f, ensure_ascii=False, indent=4, cls=DateTimeEncoder)
+        logger.info(f"Checkpoint salvato: {len(results)} casi processati.")
+    except Exception as e:
+        logger.error(f"Errore durante il salvataggio del checkpoint: {e}")
 
 class RateLimitedOllamaModel(OllamaModel):
     def __init__(self, model, *args, **kwargs):
@@ -92,8 +118,9 @@ def evaluate_qa_tool(dataset, retrieval):
 
     ollama_model = RateLimitedOllamaModel(
         model="gpt-oss:120b-cloud",
-        #base_url="http://localhost:11434"
     )
+
+    checkpoint_file = os.path.join(project_root, "evaluation", "tool_eval", "partial_results.json")
 
     metrics = [
         AnswerRelevancyMetric(model=ollama_model),
@@ -119,8 +146,6 @@ def evaluate_qa_tool(dataset, retrieval):
                     "summary": summary_text,
                 }
 
-                language_hint = detect_language_from_query(user_query)
-
                 output = qa_tool.execute(
                     retriever=retrieval,
                     query=processed_query,
@@ -130,13 +155,17 @@ def evaluate_qa_tool(dataset, retrieval):
                 if isinstance(actual_output, dict):
                     actual_output = str(actual_output)
 
-                label = "CON RIASSUNTO" if config["summary"] else "SENZA RIASSUNTO"
-                print(f"\n[{idx + 1}] {label}")
-                print(f"Q: {user_query}")
-                print(f"A: {actual_output[:150]}...")
-                print("-" * 40)
-
                 raw_sources = output.get("docs_source", [])
+
+                # ---- RETRIEVAL METRICS ----
+                #retrieved_doc_ids = extract_retrieved_doc_ids(raw_sources)
+                #relevant_doc_ids = test_case_data.get("relevant_docs", [])
+
+                #retrieval_metrics = calculate_retrieval_metrics(
+                #    retrieved_doc_ids,
+                #    relevant_doc_ids,
+                #    k=5)
+
                 retrieval_context = []
                 for item in raw_sources:
                     if isinstance(item, dict):
@@ -146,10 +175,10 @@ def evaluate_qa_tool(dataset, retrieval):
                     else:
                         retrieval_context.append(str(item))
 
+                # ---- CUSTOM METRICS ----
                 custom_res = custom_metrics(
                     actual_output,
                     test_case_data["expected_answer"],
-                    language=language_hint
                 )
 
                 input_text = user_query
@@ -172,18 +201,38 @@ def evaluate_qa_tool(dataset, retrieval):
                     "actual_output": actual_output,
                     "deepeval_result": deepeval_res,
                     "custom_metric_result": custom_res,
+                    #"retrieval_metrics": retrieval_metrics,
+                    "timestamp": datetime.datetime.now().isoformat()
                 })
 
                 print(f" -> Elaborato caso {idx + 1} [Summary={config['summary']}]")
+                save_checkpoint(results, checkpoint_file)
             except Exception as e:
                 print(f"\n!!! ERRORE CRITICO DURANTE IL CASO {idx + 1} !!!")
                 print(f"Errore: {e}")
                 print("Interruzione forzata. Salvataggio dei risultati parziali ottenuti finora...")
+                save_checkpoint(results, checkpoint_file)
                 return results
     return results
 
 def start_qa_evaluation():
     dataset = TEST_CASES
+
+    results = []
+    checkpoint_file = "partial_results.json"
+
+    if os.path.exists(checkpoint_file):
+        try:
+            with open(checkpoint_file, "r", encoding="utf-8") as infile:
+                results = json.load(infile)
+            logger.info(f"Checkpoint trovato: caricati {len(results)} risultati.")
+        except Exception as e:
+            logger.error(f"Errore nel caricamento del checkpoint: {e}")
+            results = []
+
+    if len(results) != 0:
+        generate_qa_report(results)
+        return
 
     try:
         ingestor = IngestionFlow("691642bdbaec0c4aae000526")
@@ -196,15 +245,13 @@ def start_qa_evaluation():
 
         retrieval = ingestor.retriever_vs
 
+        logger.info("Inizio valutazione su test set...\n")
+
+        results.append(evaluate_qa_tool(dataset, retrieval))
+
     except Exception as e:
         logger.error(f"Errore inizializzazione ingestion: {e}", exc_info=True)
         return
-
-    logger.info("Inizio valutazione su test set...\n")
-
-    results = evaluate_qa_tool(dataset, retrieval)
-    generate_html_results(results, "valutazione_qa.html")
-
 
 if __name__ == "__main__":
     start_qa_evaluation()

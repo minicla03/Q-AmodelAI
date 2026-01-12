@@ -10,20 +10,27 @@ class QATool(IToolStrategy):
     def __init__(self):
         super().__init__()
 
-    def execute(self, retriever, query: dict, language="italian"):
+    def execute(self, retriever, query: dict):
         user_query = query.get("user_query")
         summary = query.get("summary", "Nessuna storia precedente disponibile.")
 
         filtered_docs = self._retrieve_documents(retriever, user_query)
+        language = self._detect_language_from_query(user_query)
+
+        if language:
+            lang_instruction = f"Answer in {language}"
+            target_metadata = language
+        else:
+            lang_instruction = "Answer in the same language used in the User Query"
+            target_metadata = "auto-detected"
 
         if not user_query:
             return {
                 "type": "ERROR",
                 "ai_response": "Si è verificato un errore interno: query mancante.",
                 "docs_source": [],
-                "metadata": {"language": language}
+                "metadata": {"language": target_metadata}
             }
-
 
         if not filtered_docs:
             print("[QATool] Nessun documento trovato nel contesto. Interruzione anticipata.")
@@ -31,11 +38,11 @@ class QATool(IToolStrategy):
                 "type": "QA",
                 "ai_response": "Informazione non presente nel contesto.",
                 "docs_source": [],
-                "metadata": {"language": language}
+                "metadata": {"language": target_metadata}
             }
 
         system_prompt = f"""
-            Answer in {language} clearly and simply,
+            {lang_instruction} clearly and simply,
             explaining the main concepts in a way that’s easy to understand even for non-experts.
             The answer should include the essential details, such as definitions and key characteristics,
             but without using overly technical or complex language.
@@ -88,5 +95,5 @@ class QATool(IToolStrategy):
             "type": "QA",
             "ai_response": response,
             "docs_source": final_sources,
-            "metadata": {"language": language}
+            "metadata": {"language": target_metadata}
         }

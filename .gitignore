@@ -204,3 +204,4 @@ test/
 /rag_logic/test_docs_storage/
 /rag_logic/docs_storage/
 /presentation/
+rag_logic/utils.py

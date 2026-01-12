@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import importlib
 from abc import abstractmethod, ABC
-
+import re
 
 class Context:
 
@@ -45,6 +45,30 @@ class ContextFactory:
 
 class IToolStrategy(ABC):
 
+    LANGUAGE_ALIASES = {
+        "italian": ["italiano", "italian"],
+        "english": ["inglese", "english"],
+        "french": ["francese", "french"],
+        "spanish": ["spagnolo", "spanish"],
+        "german": ["tedesco", "german"]
+    }
+
+    def _detect_language_from_query(self, query):
+        if not query:
+            return None
+
+        query_lower = query.lower()
+        for lang, aliases in self.LANGUAGE_ALIASES.items():
+            for alias in aliases:
+                patterns = [
+                    rf"\b(in|in lingua)\s+{re.escape(alias)}\b",
+                    rf"rispondi in {re.escape(alias)}",
+                    rf"\b{re.escape(alias)}\b"
+                ]
+                if any(re.search(pat, query_lower) for pat in patterns):
+                    return lang
+        return None
+
     def _retrieve_documents(self, retriever, user_query):
         if hasattr(retriever, "retrieve_and_explain"):
             print("Retrieving documents and explaining...")
@@ -57,5 +81,5 @@ class IToolStrategy(ABC):
         return "\n\n".join(doc.page_content for doc in docs)
 
     @abstractmethod
-    def execute(self, retriever, query: dict, language: str = "italian") -> dict:
+    def execute(self, retriever, query: dict) -> dict:
         pass

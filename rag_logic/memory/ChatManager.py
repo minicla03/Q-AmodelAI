@@ -101,7 +101,7 @@ class ChatManager:
             self.ready = False
             logger.info("Sessione chiusa.")
 
-    def execute_rag_pipeline(self, user_query, default_language="italian", memory_ability=True):
+    def execute_rag_pipeline(self, user_query, memory_ability=True):
 
         if not self.ready:
             return {
@@ -109,9 +109,6 @@ class ChatManager:
                 "ai_response": "La sessione è terminata. Riavvia il notebook."}
 
         logger.info("Avvio pipeline RAG per query utente: %s", user_query)
-
-        language = detect_language_from_query(user_query) or default_language
-        logger.info("Lingua rilevata: %s", language)
 
         history_messages = []
         msg_count = 0
@@ -123,10 +120,7 @@ class ChatManager:
             except Exception as e:
                 logger.warning(f"Impossibile recuperare history: {e}")
 
-        agent = PlannerAgent(
-            retriever=self.doc_manager.retriever,
-            language_hint=language
-        )
+        agent = PlannerAgent(retriever=self.doc_manager.retriever,)
 
         try:
             final_state = agent.execute_agent(

@@ -15,12 +15,14 @@ logger = logging.getLogger(__name__)
 
 class SummarizerTool(IToolStrategy):
 
-    def execute(self, retriever, query: dict, language_hint: str = "italian") -> dict:
+    def execute(self, retriever, query: dict):
 
         conversation_history = query.get("conversation_history", [])
 
         logger.info("Avvio generazione sommario...")
         logger.info("Lunghezza conversazione: %d messaggi", len(conversation_history))
+
+        language = self._detect_language_from_query(conversation_history[0])
 
         # Converte la conversazione in testo
         formatted_lines = []
@@ -48,7 +50,7 @@ class SummarizerTool(IToolStrategy):
             and produce a clear, concise summary capturing the essential information.\n\n
     
             Guidelines:\n
-            - Write in {language_hint}.\n
+            - Write in {language}.\n
             - Focus on the main topics discussed, the user’s goals, and any specific requests or constraints.\n
             - Omit greetings, filler phrases, or unrelated small talk.\n
             - Maintain a neutral and factual tone.\n
@@ -73,7 +75,7 @@ class SummarizerTool(IToolStrategy):
             logger.info("Invio messaggi al modello LLM...", )
             summary = chain.invoke({
                 "conversation_text": conv_text,
-                "language_hint": language_hint})
+                "language": language})
             logger.debug("Sommario:\n%s", summary)
             logger.info("Sommario generato correttamente. Lunghezza caratteri: %d %s", len(summary), type(summary))
             return summary.strip()

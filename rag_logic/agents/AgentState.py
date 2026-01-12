@@ -2,10 +2,10 @@ from typing import List, Optional
 
 
 class AgentState:
-    def __init__(self, user_query: str, language_hint: str = "italian", message_count: int = 0):
+    def __init__(self, user_query: str, message_count: int = 0):
         self._has_answer: bool = False
         self.user_query = user_query
-        self.language_hint = language_hint
+        self.language_hint = None
         self.message_count = message_count
 
         self.docs = []

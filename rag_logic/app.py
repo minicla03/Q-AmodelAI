@@ -234,7 +234,6 @@ def main():
                     start_time = time.time()
                     response = manager.execute_rag_pipeline(
                         user_query=user_input,
-                        default_language="italian",
                         memory_ability=True,
                     )
                     elapsed = time.time() - start_time
