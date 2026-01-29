@@ -4,7 +4,9 @@ import { usePathname } from "next/navigation"
 import { ModeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Bell } from "lucide-react"
+import { Bell, Menu } from "lucide-react"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { SidebarContent } from "@/components/layout/sidebar"
 
 export function Header() {
   const pathname = usePathname()
@@ -26,9 +28,22 @@ export function Header() {
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-background px-6">
-      <div className="flex items-center text-sm">
-        <span className="font-semibold text-foreground">Cognix</span>
-        {breadcrumbs}
+      <div className="flex items-center gap-4">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle Menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-64">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+        <div className="flex items-center text-sm">
+            <span className="font-semibold text-foreground hidden md:inline">Cognix</span>
+            {breadcrumbs}
+        </div>
       </div>
 
       <div className="flex items-center gap-4">

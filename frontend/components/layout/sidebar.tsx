@@ -16,7 +16,7 @@ import {
 } from "lucide-react"
 
 const sidebarItems = [
-  { name: "Home", href: "/", icon: Home },
+  { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Chat", href: "/chat", icon: MessageSquare },
   { name: "Flashcards", href: "/flashcards", icon: BookOpen },
   { name: "Quiz", href: "/quiz", icon: BrainCircuit },
@@ -24,13 +24,13 @@ const sidebarItems = [
   { name: "Documents", href: "/documents", icon: Files },
 ]
 
-export function Sidebar() {
+export function SidebarContent() {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-screen flex-col border-r bg-background w-64 hidden md:flex">
+    <div className="flex h-full flex-col bg-background">
       <div className="p-6 border-b">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl">
+        <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl">
           <BrainCircuit className="h-6 w-6 text-primary" />
           <span>Cognix</span>
         </Link>
@@ -65,12 +65,22 @@ export function Sidebar() {
               <Settings className="h-4 w-4" />
               Settings
             </Link>
-             <Button variant="ghost" className="justify-start gap-3 w-full px-3 text-muted-foreground hover:text-primary">
-                <LogOut className="h-4 w-4" />
-                Logout
-             </Button>
+             <Link href="/">
+               <Button variant="ghost" className="justify-start gap-3 w-full px-3 text-muted-foreground hover:text-primary">
+                  <LogOut className="h-4 w-4" />
+                  Logout
+               </Button>
+             </Link>
         </nav>
       </div>
+    </div>
+  )
+}
+
+export function Sidebar() {
+  return (
+    <div className="hidden md:flex h-screen flex-col border-r w-64">
+       <SidebarContent />
     </div>
   )
 }
