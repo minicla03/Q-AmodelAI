@@ -195,6 +195,8 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+.idea
+persistence/short_term_memory/redis/redis.conf
 /evaluation/tool_eval/data
 .gitignore
 presentation/docs
